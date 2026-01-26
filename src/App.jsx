@@ -364,6 +364,46 @@ const updateMoney = (golfId, value) => {
     XLSX.writeFile(wb, "herrgolf.xlsx");
   };
 
+const buildTotalTableRows = () => {
+  const players = {};
+
+  // Samla alla spelare från alla ronder
+  rounds.forEach((round, roundIndex) => {
+    round.results.forEach(res => {
+      if (!players[res.golfId]) {
+        players[res.golfId] = {
+          golfId: res.golfId,
+          name: res.name,
+          hcp: res.hcp,
+          shcp: res.shcp,
+          pointsPerRound: Array(ROUNDS).fill(""),
+          total: 0,
+          money: 0
+        };
+      }
+
+      players[res.golfId].pointsPerRound[roundIndex] = res.points;
+      players[res.golfId].total += res.points;
+      players[res.golfId].money += res.money || 0;
+    });
+  });
+
+  // Sortera på totalpoäng
+  const sorted = Object.values(players)
+    .sort((a, b) => b.total - a.total);
+
+  // Bygg tabellrader
+  return sorted.map((p, index) => ([
+    index + 1,                 // Plac
+    p.name,                    // Namn
+    p.hcp,                     // HCP
+    p.shcp,                    // SHCP
+    ...p.pointsPerRound,       // H#1 ... H#16
+    p.total,                   // Total poäng
+    p.money                    // Pengar
+  ]));
+};
+
 const exportCompetitionPDF = (mode) => {
   const isTotal = mode === "TOTAL";
 
