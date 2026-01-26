@@ -534,9 +534,26 @@ if (mode === "TOTAL") {
           <Button onClick={()=>resultRef.current.click()}>📥 Resultat</Button>
           <Button onClick={generateResults}>🏁 Skapa</Button>
           <Button onClick={exportExcel}>📊 Excel</Button>
-          <Button onClick={() => exportCompetitionPDF("TOTAL")}>📄 PDF Total</Button>
-          <Button onClick={() => exportCompetitionPDF("A")}>📄 PDF A</Button>
-          <Button onClick={() => exportCompetitionPDF("B")}>📄 PDF B</Button>
+<Button onClick={() => {
+  console.log("PDF TOTAL klickad");
+  exportCompetitionPDF("TOTAL");
+}}>
+  📄 PDF Total
+</Button>
+
+<Button onClick={() => {
+  console.log("PDF A klickad");
+  exportCompetitionPDF("A");
+}}>
+  📄 PDF A
+</Button>
+
+<Button onClick={() => {
+  console.log("PDF B klickad");
+  exportCompetitionPDF("B");
+}}>
+  📄 PDF B
+</Button>
 	  <Button onClick={clearCurrentRound}>🧹 Rensa deltävling</Button>
           <Button onClick={restoreBackup}>♻️ Återställ</Button>
           <Button onClick={()=>{
