@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 /* =====================================================
    UI KOMPONENTER
@@ -357,12 +359,116 @@ const updateMoney = (golfId, value) => {
     XLSX.writeFile(wb, "herrgolf.xlsx");
   };
 
-  const exportPDF = () => window.print();
+  const exportCompetitionPDF = (mode) => {
+  const isTotal = mode === "TOTAL";
 
-  const exportPDFClass = (klass) => {
-    setClassFilter(klass);
-    setTimeout(() => window.print(), 300);
-  };
+// Total = liggande (landscape), annars stående (portrait)
+const doc = new jsPDF(
+  isTotal ? "l" : "p",   // l = landscape, p = portrait
+  "mm",
+  "a4"
+);
+
+
+  const marginX = isTotal ? 10 : 15;
+  let y = 20;
+
+  // LOGO
+  const logoImg = "/logo-192.png"; // samma som i public
+  doc.addImage(logoImg, "PNG", marginX, y, 30, 30);
+
+  // TITEL
+doc.setFontSize(18);
+doc.text(
+ 	 `Hammarö GK – Herrgolf #${currentRound}`,
+ 	 marginX + 40,
+ 	 y + 18
+);
+
+    // Datum
+const today = new Date().toLocaleDateString("sv-SE");
+doc.setFontSize(11);
+doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
+
+y += 45;
+
+
+  // ====== Hjälpfunktion för tabeller ======
+  const renderTable = (title, rows) => {
+  // Ny sida om inte första tabellen
+  if (y > 40) {
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFontSize(14);
+  doc.text(title, marginX, y);
+  y += 8;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    pageBreak: "avoid",   // bryt inte mitt i tabell
+    head: [[
+      "Plac",
+      "Namn",
+      "HCP",
+      "SHCP",
+      "Netto",
+      "Poäng",
+      "Pengar (kr)"
+    ]],
+    body: rows
+  });
+
+  y = doc.lastAutoTable.finalY + 12;
+};
+
+// ===== DATA =====
+
+const classA = current.results.filter(r => r.class === "A");
+const classB = current.results.filter(r => r.class === "B");
+
+const mapRows = list =>
+  list.map(r => [
+    r.net === 999 ? "❌" : r.place,
+    r.name,
+    r.hcp,
+    r.shcp,
+    r.net === 999 ? "" : r.net,
+    r.points,
+    r.money || ""
+  ]);
+
+// --- TOTAL ---
+const totalRows = totals.map((t, idx) => [
+  idx + 1,
+  t.name,
+  "",
+  "",
+  "",
+  t.total,
+  t.money || ""
+]);
+
+// ===== Välj vad som ska exporteras =====
+if (mode === "A") {
+  renderTable("Resultat – Klass A", mapRows(classA));
+}
+
+if (mode === "B") {
+  renderTable("Resultat – Klass B", mapRows(classB));
+}
+
+if (mode === "TOTAL") {
+  renderTable("Totalställning", totalRows);
+}
+
+
+  // SPARA
+  doc.save(`herrgolf_${currentRound}.pdf`);
+};
+
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
 
@@ -422,9 +528,9 @@ const updateMoney = (golfId, value) => {
           <Button onClick={()=>resultRef.current.click()}>📥 Resultat</Button>
           <Button onClick={generateResults}>🏁 Skapa</Button>
           <Button onClick={exportExcel}>📊 Excel</Button>
-          <Button onClick={exportPDF}>📄 PDF Total</Button>
-          <Button onClick={()=>exportPDFClass("A")}>📄 PDF A</Button>
-          <Button onClick={()=>exportPDFClass("B")}>📄 PDF B</Button>
+          <Button onClick={() => exportCompetitionPDF("TOTAL")}>📄 PDF Total</Button>
+          <Button onClick={() => exportCompetitionPDF("A")}>📄 PDF A</Button>
+          <Button onClick={() => exportCompetitionPDF("B")}>📄 PDF B</Button>
 	  <Button onClick={clearCurrentRound}>🧹 Rensa deltävling</Button>
           <Button onClick={restoreBackup}>♻️ Återställ</Button>
           <Button onClick={()=>{
