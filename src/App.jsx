@@ -408,7 +408,11 @@ y += 20;
 autoTable(doc, {
   startY: y,
   margin: { left: marginX, right: marginX, top: 10, bottom: 10 },
-
+  pageBreak: "avoid",   
+  styles: {
+    fontSize: 9,     
+    cellPadding: 2
+  },
   head: [[
     "Plac",
     "Namn",
@@ -418,16 +422,9 @@ autoTable(doc, {
     "Poäng",
     "Pengar (kr)"
   ]],
+  body: rows
+});
 
-  body: rows,
-
-  pageBreak: "avoid",
-  rowPageBreak: "avoid",
-
-  styles: {
-    fontSize: 8,
-    cellPadding: 1
-  },
 
   headStyles: {
     fillColor: [230, 230, 230],
