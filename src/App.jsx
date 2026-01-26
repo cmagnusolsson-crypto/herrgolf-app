@@ -407,17 +407,24 @@ y += 20;
 
 autoTable(doc, {
   startY: y,
-  margin: { 
-    left: marginX, 
-    right: marginX, 
-    top: 4,        // 👈 mindre toppmarginal
-    bottom: 6
+  margin: {
+    left: marginX,
+    right: marginX,
+    top: 4,
+    bottom: 6,
   },
-  pageBreak: "avoid",    // 👈 förhindra att tabellen flyttas till ny sida
+  pageBreak: "avoid",
   styles: {
     fontSize: 9,
-    cellPadding: 2
+    cellPadding: 2,
   },
+
+  // ✅ FLYTTAD HIT
+  headStyles: {
+    fillColor: [230, 230, 230],
+    fontSize: 8,
+  },
+
   head: [[
     "Plac",
     "Namn",
@@ -425,18 +432,12 @@ autoTable(doc, {
     "SHCP",
     "Netto",
     "Poäng",
-    "Pengar (kr)"
+    "Pengar"
   ]],
-  body: rows
+
+  body: rows,
 });
 
-
-
-  headStyles: {
-    fillColor: [230, 230, 230],
-    fontSize: 8,
-  }
-});
 
   y = doc.lastAutoTable.finalY + 12;
 };
