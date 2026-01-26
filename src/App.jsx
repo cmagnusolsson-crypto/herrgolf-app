@@ -434,7 +434,7 @@ autoTable(doc, {
 
   headStyles: {
     fillColor: [230, 230, 230],
-    fontSize: 8
+    fontSize: 8,
   }
 });
 
