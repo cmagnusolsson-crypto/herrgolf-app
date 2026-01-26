@@ -455,7 +455,7 @@ const exportCompetitionPDF = (mode) => {
         fillColor: [230, 230, 230],
         fontSize: isTotal ? 9 : 8,
       },
- const totalHead = [
+const totalHead = [
   "Plac",
   "Namn",
   "HCP",
@@ -465,8 +465,25 @@ const exportCompetitionPDF = (mode) => {
   "Pengar"
 ];
 
-      body: rows,
-    });
+autoTable(doc, {
+  startY: y,
+  styles: {
+    fontSize: isTotal ? 8 : 7,
+  },
+  head: mode === "TOTAL"
+    ? [totalHead]
+    : [[
+        "Plac",
+        "Namn",
+        "HCP",
+        "SHCP",
+        "Netto",
+        "Poäng",
+        "Pengar"
+      ]],
+  body: rows,
+});
+
 
     y = doc.lastAutoTable.finalY + 10;
   };
