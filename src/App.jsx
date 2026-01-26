@@ -195,13 +195,16 @@ const clearCurrentRound = () => {
 
   alert(`Deltävling #${currentRound} är nu rensad ✅`);
 };
+
 const updateMoney = (playerId, value) => {
   setRounds(prev => {
     const copy = [...prev];
     const round = copy[currentRound - 1];
 
     round.results = round.results.map(r =>
-      r.id === playerId ? { ...r, money: Number(value) } : r
+      r.id === playerId
+        ? { ...r, money: Number(value) }
+        : r
     );
 
     return copy;
