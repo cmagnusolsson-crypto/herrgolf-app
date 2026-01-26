@@ -425,8 +425,8 @@ autoTable(doc, {
   pageBreak: "avoid",        // Försök hålla tabellen på samma sida
   rowPageBreak: "avoid",     // Bryt inte rader
   styles: {
-    fontSize: 9,             // Mindre text → får plats på en sida
-    cellPadding: 2
+    fontSize: 8,             // Mindre text → får plats på en sida
+    cellPadding: 1
   },
   headStyles: {
     fillColor: [230, 230, 230],
