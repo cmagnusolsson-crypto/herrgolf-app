@@ -200,13 +200,6 @@ const clearCurrentRound = () => {
     localStorage.setItem(BACKUP_KEY, JSON.stringify(rounds));
   }, [rounds]);
 
-  const restoreBackup = () => {
-    const backup = localStorage.getItem(BACKUP_KEY);
-    if (!backup) return alert("Ingen backup finns.");
-    if (!window.confirm("Återställ backup?")) return;
-    setRounds(JSON.parse(backup));
-  };
-
   /* ================= EXCEL ================= */
 
   const readExcel = async (file) => {
