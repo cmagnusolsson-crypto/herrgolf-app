@@ -491,12 +491,32 @@ const updateMoney = (playerId, value) => {
       {["A","B"].map(klass=>(
         <Card key={klass}>
           <strong>Resultat – Klass {klass}</strong>
-          {current.results.filter(r=>r.class===klass).map((r,i)=>(
-            <div key={i} style={{ fontSize:12, display:"flex", justifyContent:"space-between" }}>
-              <span>{r.place}. {r.name} ({r.net})</span>
-              <span>{r.points}p | {r.prize}kr</span>
-            </div>
-          ))}
+{current.results.filter(r => r.class === klass).map((r, i) => (
+  <div
+    key={i}
+    style={{ fontSize: 12, display: "flex", justifyContent: "space-between", gap: 8 }}
+  >
+    <span>{r.place}. {r.name} ({r.net})</span>
+
+    <span>
+      {r.points}p |
+
+      {r.place <= 4 ? (
+        <input
+          type="number"
+          value={r.money ?? ""}
+          placeholder="kr"
+          style={{ width: 60, marginLeft: 6 }}
+          onChange={(e) =>
+            updateMoney(r.id, e.target.value)
+          }
+        />
+      ) : (
+        ""
+      )}
+    </span>
+  </div>
+))}
         </Card>
       ))}
 
