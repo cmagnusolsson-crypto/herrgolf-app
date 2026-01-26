@@ -359,19 +359,14 @@ const updateMoney = (golfId, value) => {
     XLSX.writeFile(wb, "herrgolf.xlsx");
   };
 
-  const exportCompetitionPDF = (mode) => {
-const isLandscape = mode === "TOTAL" || mode === "A" || mode === "B";
+const exportCompetitionPDF = (mode) => {
+  const isLandscape = mode === "TOTAL" || mode === "A" || mode === "B";
 
-const doc = new jsPDF(
-  isLandscape ? "l" : "p",
+  const doc = new jsPDF(
+    isLandscape ? "l" : "p",
   "mm",
   "a4"
 );
-
-
-
-  const marginX = isTotal ? 10 : 15;
-  let y = 20;
 
   // LOGO
   const logoImg = "/logo-192.png"; // samma som i public
