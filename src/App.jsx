@@ -390,7 +390,7 @@ const today = new Date().toLocaleDateString("sv-SE");
 doc.setFontSize(11);
 doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
 
-y += 45;
+y += 15;
 
 
   // ====== Hjälpfunktion för tabeller ======
@@ -421,19 +421,19 @@ autoTable(doc, {
 
   body: rows,
 
-  // 🔑 Viktiga inställningar
-  pageBreak: "avoid",        // Försök hålla tabellen på samma sida
-  rowPageBreak: "avoid",     // Bryt inte rader
+  pageBreak: "avoid",
+  rowPageBreak: "avoid",
+
   styles: {
-    fontSize: 8,             // Mindre text → får plats på en sida
+    fontSize: 8,
     cellPadding: 1
   },
+
   headStyles: {
     fillColor: [230, 230, 230],
-    fontSize: 9
+    fontSize: 8
   }
 });
-
 
   y = doc.lastAutoTable.finalY + 12;
 };
@@ -451,7 +451,7 @@ const mapRows = list =>
     r.shcp,
     r.net === 999 ? "" : r.net,
     r.points,
-    r.money || ""
+    r.place <= 4 ? (r.money || "") : ""
   ]);
 
 // --- TOTAL ---
