@@ -390,7 +390,7 @@ const today = new Date().toLocaleDateString("sv-SE");
 doc.setFontSize(11);
 doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
 
-y += 25;
+y += 20;
 
 
   // ====== Hjälpfunktion för tabeller ======
