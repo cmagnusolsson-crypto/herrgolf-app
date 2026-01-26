@@ -395,12 +395,6 @@ y += 20;
 
   // ====== Hjälpfunktion för tabeller ======
   const renderTable = (title, rows) => {
-  // Ny sida om inte första tabellen
-  if (y > 250) {
-    doc.addPage();
-    y = 20;
-  }
-
   doc.setFontSize(14);
   doc.text(title, marginX, y);
   y += 8;
@@ -413,7 +407,6 @@ autoTable(doc, {
     top: 4,
     bottom: 6,
   },
-  pageBreak: "avoid",
   styles: {
     fontSize: 9,
     cellPadding: 2,
