@@ -390,7 +390,7 @@ const today = new Date().toLocaleDateString("sv-SE");
 doc.setFontSize(11);
 doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
 
-y += 15;
+y += 8;
 
 
   // ====== Hjälpfunktion för tabeller ======
@@ -409,12 +409,13 @@ autoTable(doc, {
     bottom: 4,
   },
   styles: {
-    fontSize: 8,
-    cellPadding: 1.2,
+    fontSize: 7.5,
+    cellPadding: 1,
   },
   headStyles: {
     fillColor: [230, 230, 230],
-    fontSize: 7,
+    fontSize: 6.8,
+  cellPadding: 1,
   },
 
   head: [[
