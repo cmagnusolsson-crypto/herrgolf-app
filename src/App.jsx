@@ -389,8 +389,8 @@ const exportCompetitionPDF = (mode) => {
     y + 16
   );
 
-      y += 26;   // mindre toppmarginal för A/B
-  }
+      y += 26;
+ 
 
   // ===== Tabellfunktion =====
   const renderTable = (title, rows) => {
