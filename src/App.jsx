@@ -364,9 +364,12 @@ const exportCompetitionPDF = (mode) => {
 
   const doc = new jsPDF(
     isLandscape ? "l" : "p",
-  "mm",
-  "a4"
-);
+    "mm",
+    "a4"
+  );
+
+  const marginX = 10;
+  let y = 15;
 
   // LOGO
   const logoImg = "/logo-192.png"; // samma som i public
