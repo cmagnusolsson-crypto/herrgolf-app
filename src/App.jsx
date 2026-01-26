@@ -365,123 +365,113 @@ const updateMoney = (golfId, value) => {
   };
 
 const exportCompetitionPDF = (mode) => {
-  const isLandscape = mode === "TOTAL" || mode === "A" || mode === "B";
+  const isTotal = mode === "TOTAL";
 
+  // 📄 Orientation
   const doc = new jsPDF(
-    isLandscape ? "l" : "p",
+    isTotal ? "l" : "p",   // TOTAL = landscape, A/B = portrait
     "mm",
     "a4"
   );
 
-  const marginX = 10;
-  let y = 15;
+  const marginX = isTotal ? 10 : 15;
+  let y = 18;
 
   // LOGO
-  const logoImg = "/logo-192.png"; // samma som i public
-  doc.addImage(logoImg, "PNG", marginX, y, 22, 22);
+  const logoImg = "/logo-192.png";
+  doc.addImage(logoImg, "PNG", marginX, y, 26, 26);
 
   // TITEL
-doc.setFontSize(15);
-doc.text(
- 	 `Hammarö GK – Herrgolf #${currentRound}`,
- 	 marginX + 40,
- 	 y + 18
-);
+  doc.setFontSize(16);
+  doc.text(
+    `Hammarö GK – Herrgolf #${currentRound}`,
+    marginX + 34,
+    y + 16
+  );
 
-    // Datum
-const today = new Date().toLocaleDateString("sv-SE");
-doc.setFontSize(11);
-doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
+      y += 26;   // mindre toppmarginal för A/B
+  }
 
-y += 8;
-
-
-  // ====== Hjälpfunktion för tabeller ======
+  // ===== Tabellfunktion =====
   const renderTable = (title, rows) => {
-  doc.setFontSize(12);
-  doc.text(title, marginX, y);
-  y += 4;
+    doc.setFontSize(13);
+    doc.text(title, marginX, y);
+    y += 6;
 
-autoTable(doc, {
-  startY: y,
-  pageBreak: "never",   // 👈 superviktig
-  margin: {
-    left: marginX,
-    right: marginX,
-    top: 2,
-    bottom: 4,
-  },
-  styles: {
-    fontSize: 7.5,
-    cellPadding: 1,
-  },
-  headStyles: {
-    fillColor: [230, 230, 230],
-    fontSize: 6.8,
-  cellPadding: 1,
-  },
+    autoTable(doc, {
+      startY: y,
+      pageBreak: "avoid",   // undvik att splitta tabell
+      margin: {
+        left: marginX,
+        right: marginX,
+        top: 4,
+        bottom: 6,
+      },
+      styles: {
+        fontSize: isTotal ? 9 : 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [230, 230, 230],
+        fontSize: isTotal ? 9 : 8,
+      },
+      head: [[
+        "Plac",
+        "Namn",
+        "HCP",
+        "SHCP",
+        "Netto",
+        "Poäng",
+        "Pengar"
+      ]],
+      body: rows,
+    });
 
-  head: [[
-    "Plac",
-    "Namn",
-    "HCP",
-    "SHCP",
-    "Netto",
-    "Poäng",
-    "Pengar"
-  ]],
+    y = doc.lastAutoTable.finalY + 10;
+  };
 
-  body: rows,
-});
+  // ===== DATA =====
+  const classA = current.results.filter(r => r.class === "A");
+  const classB = current.results.filter(r => r.class === "B");
 
+  const mapRows = list =>
+    list.map(r => [
+      r.net === 999 ? "❌" : r.place,
+      r.name,
+      r.hcp,
+      r.shcp,
+      r.net === 999 ? "" : r.net,
+      r.points,
+      r.place <= 4 ? (r.money || "") : ""
+    ]);
 
-  y = doc.lastAutoTable.finalY + 12;
-};
-
-// ===== DATA =====
-
-const classA = current.results.filter(r => r.class === "A");
-const classB = current.results.filter(r => r.class === "B");
-
-const mapRows = list =>
-  list.map(r => [
-    r.net === 999 ? "❌" : r.place,
-    r.name,
-    r.hcp,
-    r.shcp,
-    r.net === 999 ? "" : r.net,
-    r.points,
-    r.place <= 4 ? (r.money || "") : ""
+  const totalRows = totals.map((t, idx) => [
+    idx + 1,
+    t.name,
+    "",
+    "",
+    "",
+    t.total,
+    t.money || ""
   ]);
 
-// --- TOTAL ---
-const totalRows = totals.map((t, idx) => [
-  idx + 1,
-  t.name,
-  "",
-  "",
-  "",
-  t.total,
-  t.money || ""
-]);
+  // ===== Välj export =====
+  if (mode === "A") {
+    renderTable("Resultat – Klass A", mapRows(classA));
+  }
 
-// ===== Välj vad som ska exporteras =====
-if (mode === "A") {
-  renderTable("Resultat – Klass A", mapRows(classA));
-}
+  if (mode === "B") {
+    renderTable("Resultat – Klass B", mapRows(classB));
+  }
 
-if (mode === "B") {
-  renderTable("Resultat – Klass B", mapRows(classB));
-}
-
-if (mode === "TOTAL") {
-  renderTable("Totalställning", totalRows);
-}
-
+  if (mode === "TOTAL") {
+    renderTable("Totalställning", totalRows);
+  }
 
   // SPARA
-  doc.save(`herrgolf_${currentRound}.pdf`);
+  doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
 };
+
 
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
