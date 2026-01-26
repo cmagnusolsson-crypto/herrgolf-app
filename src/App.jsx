@@ -375,10 +375,10 @@ const doc = new jsPDF(
 
   // LOGO
   const logoImg = "/logo-192.png"; // samma som i public
-  doc.addImage(logoImg, "PNG", marginX, y, 30, 30);
+  doc.addImage(logoImg, "PNG", marginX, y, 22, 22);
 
   // TITEL
-doc.setFontSize(18);
+doc.setFontSize(15);
 doc.text(
  	 `Hammarö GK – Herrgolf #${currentRound}`,
  	 marginX + 40,
@@ -390,14 +390,14 @@ const today = new Date().toLocaleDateString("sv-SE");
 doc.setFontSize(11);
 doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
 
-y += 8;
+y += 15;
 
 
   // ====== Hjälpfunktion för tabeller ======
   const renderTable = (title, rows) => {
   doc.setFontSize(12);
   doc.text(title, marginX, y);
-  y += 5;
+  y += 4;
 
 autoTable(doc, {
   startY: y,
