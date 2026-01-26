@@ -113,6 +113,7 @@ function assignClasses(players) {
 ===================================================== */
 
 export default function App() {
+
   const fileRef = useRef(null);
   const resultRef = useRef(null);
 
@@ -122,6 +123,27 @@ export default function App() {
     locked: false,
     prizes: { A: [200,150,100,50,50], B: [200,150,100,50,50] }
   }));
+  
+const restoreBackup = () => {
+  const backup = localStorage.getItem(BACKUP_KEY);
+  if (!backup) {
+    alert("Ingen backup hittades.");
+    return;
+  }
+
+  const ok = window.confirm(
+    "Vill du återställa senaste backup? Nuvarande data skrivs över."
+  );
+  if (!ok) return;
+
+  try {
+    const parsed = JSON.parse(backup);
+    setRounds(parsed);
+    alert("Backup återställd ✅");
+  } catch (e) {
+    alert("Kunde inte läsa backup.");
+  }
+};
 
   const [rounds, setRounds] = useState(emptyRounds);
   const [currentRound, setCurrentRound] = useState(1);
