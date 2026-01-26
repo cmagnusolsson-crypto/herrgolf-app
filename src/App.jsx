@@ -49,12 +49,17 @@ const Button = ({ children, ...props }) => (
       background: "#f2f2f2",
       cursor: "pointer",
       fontSize: 13,
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+
+      position: "relative",
+      zIndex: 10,          // 👈 Tvingar knappen över allt annat
+      pointerEvents: "auto"
     }}
   >
     {children}
   </button>
 );
+
 
 const Input = (props) => (
   <input
@@ -532,7 +537,17 @@ if (mode === "TOTAL") {
 
       {/* Knappar */}
       {!playerView && (
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", margin:"8px 0" }}>
+        <div
+  style={{
+    display: "flex",
+    gap: 6,
+    flexWrap: "wrap",
+    margin: "8px 0",
+    position: "relative",
+    zIndex: 5
+  }}
+>
+
           <Button onClick={()=>fileRef.current.click()}>📥 Startlista</Button>
           <Button onClick={()=>resultRef.current.click()}>📥 Resultat</Button>
           <Button onClick={generateResults}>🏁 Skapa</Button>
