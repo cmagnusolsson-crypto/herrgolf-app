@@ -88,15 +88,29 @@ const GOLF_ID_REGEX = /^\d{6}-\d{3}$/;
    HJÄLPFUNKTIONER
 ===================================================== */
 
-function calculatePoints(place) {
-  if (place === 1) return 10;
-  if (place === 2) return 8;
-  if (place === 3) return 6;
-  if (place === 4) return 5;
-  if (place === 5) return 4;
-  if (place === 6) return 3;
-  return 1;
-}
+const calculatePoints = (position, strokes) => {
+  // Diskad
+  if (strokes === 999) return 0;
+
+  let points = 0;
+
+  // Placering topp 6
+  if (position === 1) points = 10;
+  else if (position === 2) points = 8;
+  else if (position === 3) points = 6;
+  else if (position === 4) points = 5;
+  else if (position === 5) points = 4;
+  else if (position === 6) points = 3;
+
+  // Utanför topp 6
+  if (position > 6) {
+    if (strokes <= 75) points = 2;
+    else points = 1;
+  }
+
+  return points;
+};
+
 
 function assignClasses(players) {
   const sorted = [...players].sort((a, b) => a.hcp - b.hcp);
@@ -121,7 +135,7 @@ export default function App() {
     participants: [],
     results: [],
     locked: false,
-    prizes: { A: [200,150,100,50,50], B: [200,150,100,50,50] }
+    prizes: { A: [], B: [] }
   }));
 
   // ✅ Flytta hit denna
@@ -137,7 +151,7 @@ const restoreBackup = () => {
     participants: [],
     results: [],
     locked: false,
-    prizes: { A: [200,150,100,50,50], B: [200,150,100,50,50] }
+    prizes: { A: [], B: [] }
   }));
 
   setRounds(resetRounds);
@@ -180,6 +194,18 @@ const clearCurrentRound = () => {
   });
 
   alert(`Deltävling #${currentRound} är nu rensad ✅`);
+};
+const updateMoney = (playerId, value) => {
+  setRounds(prev => {
+    const copy = [...prev];
+    const round = copy[currentRound - 1];
+
+    round.results = round.results.map(r =>
+      r.id === playerId ? { ...r, money: Number(value) } : r
+    );
+
+    return copy;
+  });
 };
 
 
@@ -266,11 +292,12 @@ const clearCurrentRound = () => {
           .sort((a,b) => a.net - b.net);
 
         return list.map((p, idx) => ({
-          ...p,
-          place: idx + 1,
-          points: calculatePoints(idx + 1),
-          prize: copy[currentRound - 1].prizes[klass][idx] || 0
-        }));
+ 	  ...p,
+  	  place: idx + 1,
+  	  points: calculatePoints(idx + 1, p.net),
+  	  prize: 0   // pengar sätts manuellt i UI
+	}));
+
       });
 
       copy[currentRound - 1].results = results;
