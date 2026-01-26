@@ -405,21 +405,35 @@ y += 45;
   doc.text(title, marginX, y);
   y += 8;
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX },
-    pageBreak: "avoid",   // bryt inte mitt i tabell
-    head: [[
-      "Plac",
-      "Namn",
-      "HCP",
-      "SHCP",
-      "Netto",
-      "Poäng",
-      "Pengar (kr)"
-    ]],
-    body: rows
-  });
+autoTable(doc, {
+  startY: y,
+  margin: { left: marginX, right: marginX, top: 10, bottom: 10 },
+
+  head: [[
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    "Netto",
+    "Poäng",
+    "Pengar (kr)"
+  ]],
+
+  body: rows,
+
+  // 🔑 Viktiga inställningar
+  pageBreak: "avoid",        // Försök hålla tabellen på samma sida
+  rowPageBreak: "avoid",     // Bryt inte rader
+  styles: {
+    fontSize: 9,             // Mindre text → får plats på en sida
+    cellPadding: 2
+  },
+  headStyles: {
+    fillColor: [230, 230, 230],
+    fontSize: 9
+  }
+});
+
 
   y = doc.lastAutoTable.finalY + 12;
 };
