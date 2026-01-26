@@ -360,14 +360,14 @@ const updateMoney = (golfId, value) => {
   };
 
   const exportCompetitionPDF = (mode) => {
-  const isTotal = mode === "TOTAL";
+const isLandscape = mode === "TOTAL" || mode === "A" || mode === "B";
 
-// Total = liggande (landscape), annars stående (portrait)
 const doc = new jsPDF(
-  isTotal ? "l" : "p",   // l = landscape, p = portrait
+  isLandscape ? "l" : "p",
   "mm",
   "a4"
 );
+
 
 
   const marginX = isTotal ? 10 : 15;
