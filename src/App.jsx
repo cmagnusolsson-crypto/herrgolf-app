@@ -497,38 +497,60 @@ const updateMoney = (playerId, value) => {
         <Card key={klass}>
           <strong>Resultat – Klass {klass}</strong>
 {current.results.filter(r => r.class === klass).map((r, i) => (
-  <div
-    key={i}
-    style={{ fontSize: 12, display: "flex", justifyContent: "space-between", gap: 8 }}
-  >
-    <span>
-  {r.net === 999 ? (
-    <span style={{ color: "red", fontWeight: "bold" }}>❌</span>
-  ) : (
-    `${r.place}.`
-  )}{" "}
-  {r.name}
-</span>
+<div
+  key={i}
+  style={{
+    fontSize: 12,
+    display: "grid",
+    gridTemplateColumns: "40px 1fr 50px 50px 60px 60px 80px",
+    alignItems: "center",
+    gap: 6
+  }}
+>
 
-
-    <span>
-      {r.points}p |
-
-      {r.place <= 4 ? (
-        <input
-          type="number"
-          value={r.money ?? ""}
-          placeholder="kr"
-          style={{ width: 60, marginLeft: 6 }}
-          onChange={(e) =>
-            updateMoney(r.id, e.target.value)
-          }
-        />
-      ) : (
-        ""
-      )}
-    </span>
+  {/* Placering / Diskad */}
+  <div>
+    {r.net === 999 ? (
+      <span style={{ color: "red", fontWeight: "bold" }}>❌</span>
+    ) : (
+      r.place
+    )}
   </div>
+
+  {/* Namn */}
+  <div>{r.name}</div>
+
+  {/* HCP */}
+  <div>{r.hcp}</div>
+
+  {/* SHCP */}
+  <div>{r.shcp}</div>
+
+  {/* Netto (dölj för diskad) */}
+  <div>{r.net === 999 ? "" : r.net}</div>
+
+  {/* Poäng */}
+  <div>{r.points}p</div>
+
+  {/* Pengar – endast topp 4 */}
+  <div>
+    {r.place <= 4 && r.net !== 999 ? (
+      <input
+        type="number"
+        value={r.money ?? ""}
+        placeholder="kr"
+        style={{ width: 70 }}
+        onChange={(e) =>
+          updateMoney(r.id, e.target.value)
+        }
+      />
+    ) : (
+      ""
+    )}
+  </div>
+
+</div>
+
 ))}
         </Card>
       ))}
