@@ -88,27 +88,23 @@ const GOLF_ID_REGEX = /^\d{6}-\d{3}$/;
    HJÄLPFUNKTIONER
 ===================================================== */
 
-const calculatePoints = (position, strokes) => {
+const calculatePoints = (place, net) => {
+  const p = Number(net);
+
   // Diskad
-  if (strokes === 999) return 0;
+  if (p === 999) return 0;
 
-  let points = 0;
-
-  // Placering topp 6
-  if (position === 1) points = 10;
-  else if (position === 2) points = 8;
-  else if (position === 3) points = 6;
-  else if (position === 4) points = 5;
-  else if (position === 5) points = 4;
-  else if (position === 6) points = 3;
-
-  // Utanför topp 6
-  if (position > 6) {
-    if (strokes <= 75) points = 2;
-    else points = 1;
+  // Topp 6
+  const top6 = [10, 8, 6, 5, 4, 3];
+  if (place >= 1 && place <= 6) {
+    return top6[place - 1];
   }
 
-  return points;
+  // Från plats 7 och ≤ 75 slag
+  if (p <= 75) return 2;
+
+  // Över 75 slag
+  return 1;
 };
 
 
@@ -292,7 +288,16 @@ const updateMoney = (playerId, value) => {
       const results = ["A","B"].flatMap(klass => {
         const list = part
           .filter(p => p.class === klass && p.net !== "")
-          .sort((a,b) => a.net - b.net);
+          .sort((a, b) => {
+  		// Diskade (999) ska alltid hamna sist
+  		if (a.net === 999 && b.net === 999) return 0;
+  		if (a.net === 999) return 1;
+  		if (b.net === 999) return -1;
+
+  		// Annars sortera på slag (lägst först)
+  		return a.net - b.net;
+});
+
 
         return list.map((p, idx) => ({
  	  ...p,
@@ -496,7 +501,15 @@ const updateMoney = (playerId, value) => {
     key={i}
     style={{ fontSize: 12, display: "flex", justifyContent: "space-between", gap: 8 }}
   >
-    <span>{r.place}. {r.name} ({r.net})</span>
+    <span>
+  {r.net === 999 ? (
+    <span style={{ color: "red", fontWeight: "bold" }}>❌</span>
+  ) : (
+    `${r.place}.`
+  )}{" "}
+  {r.name}
+</span>
+
 
     <span>
       {r.points}p |
