@@ -390,32 +390,31 @@ const today = new Date().toLocaleDateString("sv-SE");
 doc.setFontSize(11);
 doc.text(`Exporterad: ${today}`, marginX + 40, y + 30);
 
-y += 20;
+y += 8;
 
 
   // ====== Hjälpfunktion för tabeller ======
   const renderTable = (title, rows) => {
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.text(title, marginX, y);
-  y += 8;
+  y += 5;
 
 autoTable(doc, {
   startY: y,
+  pageBreak: "never",   // 👈 superviktig
   margin: {
     left: marginX,
     right: marginX,
-    top: 4,
-    bottom: 6,
+    top: 2,
+    bottom: 4,
   },
   styles: {
-    fontSize: 9,
-    cellPadding: 2,
+    fontSize: 8,
+    cellPadding: 1.2,
   },
-
-  // ✅ FLYTTAD HIT
   headStyles: {
     fillColor: [230, 230, 230],
-    fontSize: 8,
+    fontSize: 7,
   },
 
   head: [[
