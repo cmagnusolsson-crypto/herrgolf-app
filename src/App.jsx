@@ -396,7 +396,7 @@ y += 20;
   // ====== Hjälpfunktion för tabeller ======
   const renderTable = (title, rows) => {
   // Ny sida om inte första tabellen
-  if (y > 40) {
+  if (y > 250) {
     doc.addPage();
     y = 20;
   }
@@ -407,10 +407,15 @@ y += 20;
 
 autoTable(doc, {
   startY: y,
-  margin: { left: marginX, right: marginX, top: 10, bottom: 10 },
-  pageBreak: "avoid",   
+  margin: { 
+    left: marginX, 
+    right: marginX, 
+    top: 4,        // 👈 mindre toppmarginal
+    bottom: 6
+  },
+  pageBreak: "avoid",    // 👈 förhindra att tabellen flyttas till ny sida
   styles: {
-    fontSize: 9,     
+    fontSize: 9,
     cellPadding: 2
   },
   head: [[
@@ -424,6 +429,7 @@ autoTable(doc, {
   ]],
   body: rows
 });
+
 
 
   headStyles: {
