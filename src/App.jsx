@@ -123,29 +123,32 @@ export default function App() {
     locked: false,
     prizes: { A: [200,150,100,50,50], B: [200,150,100,50,50] }
   }));
-  
-const restoreBackup = () => {
-  const backup = localStorage.getItem(BACKUP_KEY);
-  if (!backup) {
-    alert("Ingen backup hittades.");
-    return;
-  }
 
-  const ok = window.confirm(
-    "Vill du återställa senaste backup? Nuvarande data skrivs över."
-  );
-  if (!ok) return;
-
-  try {
-    const parsed = JSON.parse(backup);
-    setRounds(parsed);
-    alert("Backup återställd ✅");
-  } catch (e) {
-    alert("Kunde inte läsa backup.");
-  }
-};
-
+  // ✅ Flytta hit denna
   const [rounds, setRounds] = useState(emptyRounds);
+
+  // ✅ Restore-funktionen EFTER state
+  const restoreBackup = () => {
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (!backup) {
+      alert("Ingen backup hittades.");
+      return;
+    }
+
+    const ok = window.confirm(
+      "Vill du återställa senaste backup? Nuvarande data skrivs över."
+    );
+    if (!ok) return;
+
+    try {
+      const parsed = JSON.parse(backup);
+      setRounds(parsed);
+      alert("Backup återställd ✅");
+    } catch (e) {
+      alert("Kunde inte läsa backup.");
+    }
+  };
+
   const [currentRound, setCurrentRound] = useState(1);
   const [classFilter, setClassFilter] = useState("ALL");
   const [sortKey, setSortKey] = useState("name");
@@ -156,6 +159,29 @@ const restoreBackup = () => {
   const [playerView, setPlayerView] = useState(false);
 
   const current = rounds[currentRound - 1];
+
+const clearCurrentRound = () => {
+  const ok = window.confirm(
+    `Vill du rensa deltävling #${currentRound}? All data i denna rond tas bort.`
+  );
+  if (!ok) return;
+
+  setRounds((prev) => {
+    const copy = [...prev];
+
+    copy[currentRound - 1] = {
+      ...copy[currentRound - 1],
+      participants: [],
+      results: [],
+      locked: false
+    };
+
+    return copy;
+  });
+
+  alert(`Deltävling #${currentRound} är nu rensad ✅`);
+};
+
 
   /* ================= LAGRING ================= */
 
@@ -371,6 +397,7 @@ const restoreBackup = () => {
           <Button onClick={exportPDF}>📄 PDF Total</Button>
           <Button onClick={()=>exportPDFClass("A")}>📄 PDF A</Button>
           <Button onClick={()=>exportPDFClass("B")}>📄 PDF B</Button>
+	  <Button onClick={clearCurrentRound}>🧹 Rensa deltävling</Button>
           <Button onClick={restoreBackup}>♻️ Återställ</Button>
           <Button onClick={()=>{
             setRounds(prev=>{
