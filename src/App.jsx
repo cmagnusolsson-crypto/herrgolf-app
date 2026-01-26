@@ -455,15 +455,16 @@ const exportCompetitionPDF = (mode) => {
         fillColor: [230, 230, 230],
         fontSize: isTotal ? 9 : 8,
       },
-      head: [[
-        "Plac",
-        "Namn",
-        "HCP",
-        "SHCP",
-        "Netto",
-        "Poäng",
-        "Pengar"
-      ]],
+ const totalHead = [
+  "Plac",
+  "Namn",
+  "HCP",
+  "SHCP",
+  ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+  "Total",
+  "Pengar"
+];
+
       body: rows,
     });
 
@@ -485,15 +486,7 @@ const exportCompetitionPDF = (mode) => {
       r.place <= 4 ? (r.money || "") : ""
     ]);
 
-  const totalRows = totals.map((t, idx) => [
-    idx + 1,
-    t.name,
-    "",
-    "",
-    "",
-    t.total,
-    t.money || ""
-  ]);
+const totalRows = buildTotalTableRows();
 
   // ===== Välj export =====
   if (mode === "A") {
