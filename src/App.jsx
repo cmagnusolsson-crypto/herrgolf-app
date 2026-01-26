@@ -192,13 +192,13 @@ const clearCurrentRound = () => {
   alert(`Deltävling #${currentRound} är nu rensad ✅`);
 };
 
-const updateMoney = (playerId, value) => {
+const updateMoney = (golfId, value) => {
   setRounds(prev => {
     const copy = [...prev];
     const round = copy[currentRound - 1];
 
     round.results = round.results.map(r =>
-      r.id === playerId
+      r.golfId === golfId
         ? { ...r, money: Number(value) }
         : r
     );
@@ -541,7 +541,7 @@ const updateMoney = (playerId, value) => {
         placeholder="kr"
         style={{ width: 70 }}
         onChange={(e) =>
-          updateMoney(r.id, e.target.value)
+          updateMoney(r.golfId, e.target.value)
         }
       />
     ) : (
