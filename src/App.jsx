@@ -321,18 +321,18 @@ const updateMoney = (golfId, value) => {
   };
 
   const totals = useMemo(() => {
-    const map = {};
-    rounds.forEach(r =>
-      r.results.forEach(res => {
-        if (!map[res.golfId]) {
-          map[res.golfId] = { ...res, total: 0, money: 0 };
-        }
-        map[res.golfId].total += res.points;
-        map[res.golfId].money += res.prize || 0;
-      })
-    );
-    return Object.values(map).sort((a,b) => b.total - a.total);
-  }, [rounds]);
+  const map = {};
+  rounds.forEach(r =>
+    r.results.forEach(res => {
+      if (!map[res.golfId]) {
+        map[res.golfId] = { ...res, total: 0, money: 0 };
+      }
+      map[res.golfId].total += res.points;
+      map[res.golfId].money += res.money || 0; // ✅ FIX
+    })
+  );
+  return Object.values(map).sort((a,b) => b.total - a.total);
+}, [rounds]);
 
   /* ================= SORTERING ================= */
 
