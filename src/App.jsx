@@ -433,60 +433,44 @@ const exportCompetitionPDF = (mode) => {
  
 
   // ===== Tabellfunktion =====
-  const renderTable = (title, rows) => {
-    doc.setFontSize(13);
-    doc.text(title, marginX, y);
-    y += 6;
+const renderTable = (title, rows) => {
+  doc.setFontSize(13);
+  doc.text(title, marginX, y);
+  y += 6;
 
-    autoTable(doc, {
-      startY: y,
-      pageBreak: "avoid",   // undvik att splitta tabell
-      margin: {
-        left: marginX,
-        right: marginX,
-        top: 4,
-        bottom: 6,
-      },
-      styles: {
-        fontSize: isTotal ? 9 : 8,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [230, 230, 230],
-        fontSize: isTotal ? 9 : 8,
-      },
-const totalHead = [
-  "Plac",
-  "Namn",
-  "HCP",
-  "SHCP",
-  ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-  "Total",
-  "Pengar"
-];
+  const totalHead = [
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    "Total",
+    "Pengar"
+  ];
 
-autoTable(doc, {
-  startY: y,
-  styles: {
-    fontSize: isTotal ? 8 : 7,
-  },
-  head: mode === "TOTAL"
-    ? [totalHead]
-    : [[
-        "Plac",
-        "Namn",
-        "HCP",
-        "SHCP",
-        "Netto",
-        "Poäng",
-        "Pengar"
-      ]],
-  body: rows,
-});
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: {
+      fontSize: isTotal ? 8 : 7,
+      cellPadding: 2,
+    },
+    head: mode === "TOTAL"
+      ? [totalHead]
+      : [[
+          "Plac",
+          "Namn",
+          "HCP",
+          "SHCP",
+          "Netto",
+          "Poäng",
+          "Pengar"
+        ]],
+    body: rows,
+  });
 
-
-    y = doc.lastAutoTable.finalY + 10;
-  };
+  y = doc.lastAutoTable.finalY + 10;
+};
 
   // ===== DATA =====
   const classA = current.results.filter(r => r.class === "A");
