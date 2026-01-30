@@ -204,6 +204,8 @@ const updateMoney = (golfId, value) => {
     const copy = [...prev];
     const round = copy[currentRound - 1];
 
+    if (round.locked) return prev; // 🔒 BLOCKERA
+
     round.results = round.results.map(r =>
       r.golfId === golfId
         ? { ...r, money: Number(value) }
@@ -370,21 +372,23 @@ const buildTotalTableRows = () => {
   // Samla alla spelare från alla ronder
   rounds.forEach((round, roundIndex) => {
     round.results.forEach(res => {
-      if (!players[res.golfId]) {
-        players[res.golfId] = {
-          golfId: res.golfId,
-          name: res.name,
-          hcp: res.hcp,
-          shcp: res.shcp,
-          pointsPerRound: Array(ROUNDS).fill(""),
-          total: 0,
-          money: 0
-        };
-      }
+     if (!players[res.golfId]) {
+  players[res.golfId] = {
+    golfId: res.golfId,
+    name: res.name,
+    hcp: res.hcp,
+    shcp: res.shcp,
+    pointsPerRound: Array(ROUNDS).fill(""),
+    total: 0,
+    money: 0,
+    roundsPlayed: 0   // ✅ NY
+  };
+}
 
-      players[res.golfId].pointsPerRound[roundIndex] = res.points;
-      players[res.golfId].total += res.points;
-      players[res.golfId].money += res.money || 0;
+      	players[res.golfId].pointsPerRound[roundIndex] = res.points;
+	players[res.golfId].total += res.points;
+	players[res.golfId].money += res.money || 0;
+	players[res.golfId].roundsPlayed += 1; // ✅
     });
   });
 
@@ -394,14 +398,15 @@ const buildTotalTableRows = () => {
 
   // Bygg tabellrader
   return sorted.map((p, index) => ([
-    index + 1,                 // Plac
-    p.name,                    // Namn
-    p.hcp,                     // HCP
-    p.shcp,                    // SHCP
-    ...p.pointsPerRound,       // H#1 ... H#16
-    p.total,                   // Total poäng
-    p.money                    // Pengar
-  ]));
+  	index + 1,        // Plac
+  	p.name,           // Namn
+  	p.hcp,
+  	p.shcp,
+   p.roundsPlayed,   // ✅ Deltävlingar
+  	...p.pointsPerRound,
+  	p.total,
+  	p.money
+]));
 };
 
 const exportCompetitionPDF = (mode) => {
@@ -438,15 +443,16 @@ const renderTable = (title, rows) => {
   doc.text(title, marginX, y);
   y += 6;
 
-  const totalHead = [
-    "Plac",
-    "Namn",
-    "HCP",
-    "SHCP",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-    "Total",
-    "Pengar"
-  ];
+const totalHead = [
+  "Plac",
+  "Namn",
+  "HCP",
+  "SHCP",
+  "Delt.",
+  ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+  "Total Poäng",
+  "Inspelade Pengar"
+];
 
   autoTable(doc, {
     startY: y,
