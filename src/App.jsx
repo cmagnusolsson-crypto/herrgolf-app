@@ -470,7 +470,7 @@ const exportCompetitionPDF = async (mode) => {
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   const TITLE_Y = 26;   // 👈 rubriken hamnar snyggt under loggan
-const TABLE_Y = 31;  // 👈 gröna rubriker startar strax under rubriken
+const TABLE_Y = 29;  // 👈 gröna rubriker startar strax under rubriken
 let y = TABLE_Y;
 
 
