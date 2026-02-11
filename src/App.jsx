@@ -524,18 +524,17 @@ autoTable(doc, {
   body: totalRows,
 
   didDrawCell: function (data) {
-    // Tjock svart linje under topp 25 (radindex 24)
     if (
       data.section === "body" &&
-      data.row.index === 24 &&        // plats 25
-      data.column.index === 0        // rita bara en gång per rad
+      data.row.index === 24 &&
+      data.column.index === 0
     ) {
       const x1 = data.table.startX;
       const x2 = data.table.startX + data.table.width;
       const yLine = data.cell.y + data.cell.height;
 
-      doc.setDrawColor(0, 0, 0);     // svart
-      doc.setLineWidth(1.2);         // tjock linje
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(1.2);
       doc.line(x1, yLine, x2, yLine);
     }
   }
@@ -543,7 +542,6 @@ autoTable(doc, {
 
 doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
 return;
-
 
   // ===== KLASS A =====
   if (mode === "A") {
