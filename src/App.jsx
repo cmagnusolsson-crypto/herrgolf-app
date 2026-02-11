@@ -454,8 +454,8 @@ const exportCompetitionPDF = (mode) => {
   let y = 18;
 
   // LOGO
-  const logoImg = "/logo-192.png";
-  doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
+  // const logoImg = "/logo-192.png";
+  // doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
 
   // TITEL
   doc.setFontSize(16);
