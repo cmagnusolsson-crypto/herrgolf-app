@@ -470,11 +470,11 @@ const exportCompetitionPDF = async (mode) => {
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   const TITLE_Y = 26;   // 👈 rubriken hamnar snyggt under loggan
-const TABLE_Y = 34;  // 👈 gröna rubriker startar strax under rubriken
+const TABLE_Y = 31;  // 👈 gröna rubriker startar strax under rubriken
 let y = TABLE_Y;
 
 
-const HEADER_HEIGHT = 38; // 👈 justera 26–30 tills det känns perfekt
+const HEADER_HEIGHT = 34; // 👈 justera 26–30 tills det känns perfekt
 
 // 🔥 Ladda logga EN gång innan PDF skapas
 if (!cachedLogoBase64) {
@@ -490,7 +490,7 @@ const drawHeader = () => {
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  const logoSize = 16;
+  const logoSize = 20;
   const paddingRight = 10;
   const yLogo = 6;
   const x = pageWidth - logoSize - paddingRight;
