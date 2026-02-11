@@ -274,12 +274,58 @@ export default function App() {
     };
 
     if (mode === "TOTAL") {
-      const rows = buildTotalTableRows();
-      chunk(rows, 25).forEach((page, i) => {
-        if (i > 0) { doc.addPage("a4", "l"); y = 18; }
-        renderTable(totalHead, page, i);
+  try {
+    const rows = buildTotalTableRows();
+    const pages = chunk(rows, 25);
+
+    pages.forEach((page, i) => {
+      if (i > 0) {
+        doc.addPage("a4", "l");
+        y = 18;
+      }
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginX, right: marginX },
+        styles: { fontSize: 8, cellPadding: 2 },
+        head: [[
+          "Plac",
+          "Namn",
+          "HCP",
+          "SHCP",
+          ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+          "Total",
+          "Pengar"
+        ]],
+        body: page,
+
+        didDrawCell: (data) => {
+          if (
+            i === 0 &&
+            data.section === "body" &&
+            data.row.index === 9 &&
+            data.column.index === 0
+          ) {
+            const w = data.table.width;
+            doc.setLineWidth(0.5);
+            doc.line(
+              data.table.startX,
+              data.cell.y + data.cell.height,
+              data.table.startX + w,
+              data.cell.y + data.cell.height
+            );
+          }
+        }
       });
-    }
+    });
+
+    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  } catch (err) {
+    console.error("TOTAL PDF error:", err);
+    alert("❌ Fel vid skapande av TOTAL-PDF. Se console.");
+  }
+}
+
 
     if (mode === "A" || mode === "B") {
       const rows = current.results.filter(r => r.class === mode).map(r => [
