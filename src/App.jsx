@@ -84,8 +84,7 @@ const BACKUP_KEY = "herrgolf_backup";
 
 const CLUB_NAME = "Hammarö GK";
 const CLUB_PRIMARY = "#0f6d3b";
-const CLUB_LOGO =
-  "https://www.hammarogk.se/media/k2mkxwg0/hammarogk-logo.png?height=240";
+const CLUB_LOGO = "/logo.png";
 
 const ADMIN_PASSWORD = "HammaroGK26";
 const roundName = (n) => `Herrgolf #${n}`;
@@ -475,9 +474,22 @@ const drawHeader = () => {
 
 
   // ===== Rubrik =====
-  doc.setFontSize(16);
-  doc.text(`Totalställning herrgolf 2026`, marginX, y);
-  y += 8;
+doc.setFontSize(16);
+
+if (mode === "TOTAL") {
+  doc.text(`Totalställning – Herrgolf 2026`, marginX, y);
+}
+
+if (mode === "A") {
+  doc.text(`Resultat – Klass A – Herrgolf #${currentRound}`, marginX, y);
+}
+
+if (mode === "B") {
+  doc.text(`Resultat – Klass B – Herrgolf #${currentRound}`, marginX, y);
+}
+
+y += 8;
+
 
   const totalHead = [
     "Plac",
