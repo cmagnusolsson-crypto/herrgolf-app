@@ -499,45 +499,35 @@ const exportCompetitionPDF = (mode) => {
   const totalRows = buildTotalTableRows();
 
   // ===== TOTAL =====
-  if (mode === "TOTAL") {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: {
-        fontSize: 7.5,
-        cellPadding: 1
-      },
-      head: [totalHead],
-      body: totalRows,
+if (mode === "TOTAL") {
+  const totalRows = buildTotalTableRows();
 
-      didParseCell: function (data) {
-        // Fetstil topp 10
-        if (data.section === "body" && data.row.index < 10) {
-          data.cell.styles.fontStyle = "bold";
-        }
-      },
-
-      didDrawCell: function (data) {
-        // Svart linje under plats 25 (index 24)
-        if (
-          data.section === "body" &&
-          data.row.index === 24 &&
-          data.column.index === 0
-        ) {
-          const x1 = data.table.startX;
-          const x2 = data.table.startX + data.table.width;
-          const yLine = data.cell.y + data.cell.height;
-
-          doc.setDrawColor(0);
-          doc.setLineWidth(0.6);
-          doc.line(x1, yLine, x2, yLine);
-        }
-      }
-    });
-
-    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  if (!totalRows.length) {
+    alert("Ingen totalställning att exportera ännu.");
     return;
   }
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 7.5, cellPadding: 1 },
+    head: [[
+      "Plac",
+      "Namn",
+      "HCP",
+      "SHCP",
+      "Delt.",
+      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+      "Total",
+      "Pengar"
+    ]],
+    body: totalRows
+  });
+
+  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  return;
+}
+
 
   // ===== KLASS A =====
   if (mode === "A") {
