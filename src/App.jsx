@@ -331,14 +331,30 @@ const updateMoney = (golfId, value) => {
   rounds.forEach(r =>
     r.results.forEach(res => {
       if (!map[res.golfId]) {
-        map[res.golfId] = { ...res, total: 0, money: 0 };
+        map[res.golfId] = {
+          ...res,
+          total: 0,
+          money: 0
+        };
       }
+
+      // ✅ Uppdatera alltid till senaste handicap
+      map[res.golfId].hcp = res.hcp;
+      map[res.golfId].shcp = res.shcp;
+
       map[res.golfId].total += res.points;
-      map[res.golfId].money += res.money || 0; // ✅ FIX
+      map[res.golfId].money += res.money || 0;
     })
   );
-  return Object.values(map).sort((a,b) => b.total - a.total);
+
+  return Object.values(map).sort((a, b) => {
+    // 1) Poäng
+    if (b.total !== a.total) return b.total - a.total;
+    // 2) Tie-break: bästa HCP (lägst)
+    return a.hcp - b.hcp;
+  });
 }, [rounds]);
+
 
   /* ================= SORTERING ================= */
 
