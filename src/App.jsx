@@ -507,26 +507,42 @@ if (mode === "TOTAL") {
     return;
   }
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX },
-    styles: { fontSize: 7.5, cellPadding: 1 },
-    head: [[
-      "Plac",
-      "Namn",
-      "HCP",
-      "SHCP",
-      "Delt.",
-      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-      "Total",
-      "Pengar"
-    ]],
-    body: totalRows
-  });
+autoTable(doc, {
+  startY: y,
+  margin: { left: marginX, right: marginX },
+  styles: { fontSize: 7.5, cellPadding: 1 },
+  head: [[
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    "Delt.",
+    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    "Total",
+    "Pengar"
+  ]],
+  body: totalRows,
 
-  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-  return;
-}
+  didDrawCell: function (data) {
+    // Tjock svart linje under topp 25 (radindex 24)
+    if (
+      data.section === "body" &&
+      data.row.index === 24 &&        // plats 25
+      data.column.index === 0        // rita bara en gång per rad
+    ) {
+      const x1 = data.table.startX;
+      const x2 = data.table.startX + data.table.width;
+      const yLine = data.cell.y + data.cell.height;
+
+      doc.setDrawColor(0, 0, 0);     // svart
+      doc.setLineWidth(1.2);         // tjock linje
+      doc.line(x1, yLine, x2, yLine);
+    }
+  }
+});
+
+doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+return;
 
 
   // ===== KLASS A =====
