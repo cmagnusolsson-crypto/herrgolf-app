@@ -480,16 +480,20 @@ if (!cachedLogoBase64) {
   }
 }
 
-// ✅ drawHeader måste ligga EFTER att doc skapats
 const drawHeader = () => {
   if (!cachedLogoBase64) return;
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  const x = pageWidth - 28;
-  const yLogo = 6;
 
-  doc.addImage(cachedLogoBase64, "PNG", x, yLogo, 20, 20);
+  const logoSize = 14;      // 👈 MINDRE LOGGA (testa 10–14)
+  const paddingRight = 10; // 👈 lite luft från kanten
+  const yLogo = 6;         // 👈 höjd från toppen
+
+  const x = pageWidth - logoSize - paddingRight;
+
+  doc.addImage(cachedLogoBase64, "PNG", x, yLogo, logoSize, logoSize);
 };
+
 
 // 👇 RITA LOGGAN PÅ FÖRSTA SIDAN DIREKT
 drawHeader();
