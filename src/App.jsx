@@ -242,12 +242,13 @@ export default function App() {
   };
 
   const exportCompetitionPDF = (mode) => {
+	console.log("Export PDF mode:", mode); 
   const isTotal = mode === "TOTAL";
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   let y = 18;
 
-  doc.addImage("/logo-192.png", "PNG", marginX, y, 26, 26);
+  doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
   doc.setFontSize(16);
   doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX + 34, y + 16);
   y += 26;
@@ -306,24 +307,51 @@ export default function App() {
 }
 
     });
-    y = doc.lastAutoTable.finalY + 10;
+    y = (doc.lastAutoTable?.finalY || y) + 10;
   };
 
-  if (mode === "TOTAL") {
-    const rows = buildTotalTableRows();
-    const pages = chunk(rows, 25);
+if (mode === "TOTAL") {
+  console.log("TOTAL export startar");
 
-    pages.forEach((page, i) => {
-      if (i > 0) {
-        doc.addPage("a4", "l");
-        y = 18;
-      }
-      renderTable(totalHead, page, i);
+  const rows = buildTotalTableRows();
+
+  if (!rows.length) {
+    alert("Ingen totalställning att exportera ännu.");
+    return;
+  }
+
+  const pages = chunk(rows, 25);
+
+  pages.forEach((page, i) => {
+    if (i > 0) {
+      doc.addPage("a4", "l");
+      y = 18;
+    }
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 8, cellPadding: 2 },
+      head: [[
+        "Plac",
+        "Namn",
+        "HCP",
+        "SHCP",
+        ...Array.from({ length: ROUNDS }, (_, j) => `H#${j + 1}`),
+        "Total",
+        "Pengar"
+      ]],
+      body: page
     });
 
-    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-    return; // ✅ viktigt: stoppa här så vi INTE sparar igen
-  }
+    y = (doc.lastAutoTable?.finalY || y) + 10;
+  });
+
+  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  console.log("TOTAL export klar");
+  return;
+}
+
 
   if (mode === "A" || mode === "B") {
     const rows = current.results
