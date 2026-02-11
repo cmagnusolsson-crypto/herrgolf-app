@@ -439,13 +439,19 @@ const buildTotalTableRows = () => {
   ]));
 };
 
+const chunk = (arr, size) => {
+  const res = [];
+  for (let i = 0; i < arr.length; i += size) {
+    res.push(arr.slice(i, i + size));
+  }
+  return res;
+};
 
 const exportCompetitionPDF = (mode) => {
   const isTotal = mode === "TOTAL";
 
-  // 📄 Orientation
   const doc = new jsPDF(
-    isTotal ? "l" : "p",   // TOTAL = landscape, A/B = portrait
+    isTotal ? "l" : "p",
     "mm",
     "a4"
   );
@@ -453,67 +459,99 @@ const exportCompetitionPDF = (mode) => {
   const marginX = isTotal ? 10 : 15;
   let y = 18;
 
-  // LOGO
-  // const logoImg = "/logo-192.png";
-  // doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
-
   // TITEL
   doc.setFontSize(16);
   doc.text(
     `Hammarö GK – Herrgolf #${currentRound}`,
-    marginX + 34,
-    y + 16
+    marginX,
+    y
   );
+  y += 10;
 
-      y += 26;
- 
+  const totalHead = [
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    "Delt.",
+    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    "Total",
+    "Pengar"
+  ];
 
-  // ===== Tabellfunktion =====
-const renderTable = (title, rows, isTotalMode) => {
-  doc.setFontSize(13);
-  doc.text(title, marginX, y);
-  y += 6;
+  const classHead = [
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    "Netto",
+    "Poäng",
+    "Pengar"
+  ];
 
-const totalHead = [
-  "Plac",
-  "Namn",
-  "HCP",
-  "SHCP",
-  "Delt.",
-  ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-  "Total Poäng",
-  "Inspelade Pengar"
-];
+  const renderTable = (head, rows, pageIndex) => {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: {
+        fontSize: isTotal ? 8 : 9,
+        cellPadding: 2
+      },
+      head: [head],
+      body: rows,
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX },
-    styles: {
-      fontSize: isTotal ? 8 : 7,
-      cellPadding: 2,
-    },
-    head: isTotalMode
-      ? [totalHead]
-      : [[
-          "Plac",
-          "Namn",
-          "HCP",
-          "SHCP",
-          "Netto",
-          "Poäng",
-          "Pengar"
-        ]],
-    body: rows,
-  });
+      didDrawCell: (data) => {
+        // 🏆 Markera topp 10 (endast TOTAL, endast sida 1)
+        if (
+          isTotal &&
+          data.section === "body" &&
+          data.row.index < 10 &&
+          data.table.pageNumber === 1
+        ) {
+          doc.setFont(undefined, "bold");
+        }
 
-  y = doc.lastAutoTable.finalY + 10;
-};
+        // ➖ Linje efter topp 10 (endast TOTAL, endast sida 1)
+        if (
+          isTotal &&
+          data.section === "body" &&
+          data.row.index === 9 &&
+          data.column.index === 0 &&
+          data.table.pageNumber === 1
+        ) {
+          const w = data.table.width;
+          doc.setLineWidth(0.5);
+          doc.line(
+            data.table.startX,
+            data.cell.y + data.cell.height,
+            data.table.startX + w,
+            data.cell.y + data.cell.height
+          );
+        }
+      }
+    });
+
+    y = doc.lastAutoTable.finalY + 10;
+  };
 
   // ===== DATA =====
-  const classA = current.results.filter(r => r.class === "A");
-  const classB = current.results.filter(r => r.class === "B");
+  if (mode === "TOTAL") {
+    const totalRows = buildTotalTableRows();
+    const pages = chunk(totalRows, 25);
 
-  const mapRows = list =>
+    pages.forEach((page, i) => {
+      if (i > 0) {
+        doc.addPage("a4", "l");
+        y = 18;
+      }
+      renderTable(totalHead, page, i);
+    });
+
+    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+    return;
+  }
+
+  const mapRows = (list) =>
     list.map(r => [
       r.net === 999 ? "❌" : r.place,
       r.name,
@@ -524,24 +562,23 @@ const totalHead = [
       r.place <= 4 ? (r.money || "") : ""
     ]);
 
-const totalRows = buildTotalTableRows();
+  if (mode === "A" || mode === "B") {
+    const rows = mapRows(
+      current.results.filter(r => r.class === mode)
+    );
 
-  // ===== Välj export =====
-  if (mode === "A") {
-    renderTable("Resultat – Klass A", mapRows(classA), false);
+    chunk(rows, 25).forEach((page, i) => {
+      if (i > 0) {
+        doc.addPage("a4", "p");
+        y = 18;
+      }
+      renderTable(classHead, page, i);
+    });
+
+    doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
   }
-
-  if (mode === "B") {
-    renderTable("Resultat – Klass B", mapRows(classB), false);
-  }
-
-  if (mode === "TOTAL") {
-    renderTable("Totalställning", totalRows, true);
-  }
-
-  // SPARA
-  doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
 };
+
 
 
 

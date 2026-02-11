@@ -204,6 +204,8 @@ const updateMoney = (golfId, value) => {
     const copy = [...prev];
     const round = copy[currentRound - 1];
 
+    if (round.locked) return prev; // 🔒 BLOCKERA
+
     round.results = round.results.map(r =>
       r.golfId === golfId
         ? { ...r, money: Number(value) }
@@ -296,14 +298,18 @@ const updateMoney = (golfId, value) => {
         const list = part
           .filter(p => p.class === klass && p.net !== "")
           .sort((a, b) => {
-  		// Diskade (999) ska alltid hamna sist
-  		if (a.net === 999 && b.net === 999) return 0;
-  		if (a.net === 999) return 1;
-  		if (b.net === 999) return -1;
+  // Diskade (999) sist
+  if (a.net === 999 && b.net === 999) return 0;
+  if (a.net === 999) return 1;
+  if (b.net === 999) return -1;
 
-  		// Annars sortera på slag (lägst först)
-  		return a.net - b.net;
+  // 1) Netto (lägst först)
+  if (a.net !== b.net) return a.net - b.net;
+
+  // 2) TIE-BREAK: bästa HCP överst (lägst HCP vinner)
+  return a.hcp - b.hcp;
 });
+
 
 
         return list.map((p, idx) => ({
@@ -325,14 +331,30 @@ const updateMoney = (golfId, value) => {
   rounds.forEach(r =>
     r.results.forEach(res => {
       if (!map[res.golfId]) {
-        map[res.golfId] = { ...res, total: 0, money: 0 };
+        map[res.golfId] = {
+          ...res,
+          total: 0,
+          money: 0
+        };
       }
+
+      // ✅ Uppdatera alltid till senaste handicap
+      map[res.golfId].hcp = res.hcp;
+      map[res.golfId].shcp = res.shcp;
+
       map[res.golfId].total += res.points;
-      map[res.golfId].money += res.money || 0; // ✅ FIX
+      map[res.golfId].money += res.money || 0;
     })
   );
-  return Object.values(map).sort((a,b) => b.total - a.total);
+
+  return Object.values(map).sort((a, b) => {
+    // 1) Poäng
+    if (b.total !== a.total) return b.total - a.total;
+    // 2) Tie-break: bästa HCP (lägst)
+    return a.hcp - b.hcp;
+  });
 }, [rounds]);
+
 
   /* ================= SORTERING ================= */
 
@@ -367,7 +389,6 @@ const updateMoney = (golfId, value) => {
 const buildTotalTableRows = () => {
   const players = {};
 
-  // Samla alla spelare från alla ronder
   rounds.forEach((round, roundIndex) => {
     round.results.forEach(res => {
       if (!players[res.golfId]) {
@@ -378,31 +399,46 @@ const buildTotalTableRows = () => {
           shcp: res.shcp,
           pointsPerRound: Array(ROUNDS).fill(""),
           total: 0,
-          money: 0
+          money: 0,
+          roundsPlayed: 0
         };
       }
 
+      // senaste handicap
+      players[res.golfId].hcp = res.hcp;
+      players[res.golfId].shcp = res.shcp;
+
+      // poäng per rond
       players[res.golfId].pointsPerRound[roundIndex] = res.points;
+
+      // summeringar
       players[res.golfId].total += res.points;
       players[res.golfId].money += res.money || 0;
+
+      // räkna endast om man fått poäng
+      if (res.points > 0) {
+        players[res.golfId].roundsPlayed += 1;
+      }
     });
   });
 
-  // Sortera på totalpoäng
-  const sorted = Object.values(players)
-    .sort((a, b) => b.total - a.total);
+  const sorted = Object.values(players).sort((a, b) => {
+    if (b.total !== a.total) return b.total - a.total;
+    return a.hcp - b.hcp;
+  });
 
-  // Bygg tabellrader
   return sorted.map((p, index) => ([
-    index + 1,                 // Plac
-    p.name,                    // Namn
-    p.hcp,                     // HCP
-    p.shcp,                    // SHCP
-    ...p.pointsPerRound,       // H#1 ... H#16
-    p.total,                   // Total poäng
-    p.money                    // Pengar
+    index + 1,
+    p.name,
+    p.hcp,
+    p.shcp,
+    p.roundsPlayed,
+    ...p.pointsPerRound,
+    p.total,
+    p.money
   ]));
 };
+
 
 const exportCompetitionPDF = (mode) => {
   const isTotal = mode === "TOTAL";
@@ -418,8 +454,8 @@ const exportCompetitionPDF = (mode) => {
   let y = 18;
 
   // LOGO
-  const logoImg = "/logo-192.png";
-  doc.addImage(logoImg, "PNG", marginX, y, 26, 26);
+  // const logoImg = "/logo-192.png";
+  // doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
 
   // TITEL
   doc.setFontSize(16);
@@ -433,20 +469,21 @@ const exportCompetitionPDF = (mode) => {
  
 
   // ===== Tabellfunktion =====
-const renderTable = (title, rows) => {
+const renderTable = (title, rows, isTotalMode) => {
   doc.setFontSize(13);
   doc.text(title, marginX, y);
   y += 6;
 
-  const totalHead = [
-    "Plac",
-    "Namn",
-    "HCP",
-    "SHCP",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-    "Total",
-    "Pengar"
-  ];
+const totalHead = [
+  "Plac",
+  "Namn",
+  "HCP",
+  "SHCP",
+  "Delt.",
+  ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+  "Total Poäng",
+  "Inspelade Pengar"
+];
 
   autoTable(doc, {
     startY: y,
@@ -455,7 +492,7 @@ const renderTable = (title, rows) => {
       fontSize: isTotal ? 8 : 7,
       cellPadding: 2,
     },
-    head: mode === "TOTAL"
+    head: isTotalMode
       ? [totalHead]
       : [[
           "Plac",
@@ -491,15 +528,15 @@ const totalRows = buildTotalTableRows();
 
   // ===== Välj export =====
   if (mode === "A") {
-    renderTable("Resultat – Klass A", mapRows(classA));
+    renderTable("Resultat – Klass A", mapRows(classA), false);
   }
 
   if (mode === "B") {
-    renderTable("Resultat – Klass B", mapRows(classB));
+    renderTable("Resultat – Klass B", mapRows(classB), false);
   }
 
   if (mode === "TOTAL") {
-    renderTable("Totalställning", totalRows);
+    renderTable("Totalställning", totalRows, true);
   }
 
   // SPARA
