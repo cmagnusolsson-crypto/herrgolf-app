@@ -3,6 +3,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+autoTable(jsPDF);
+
 
 /* =====================================================
    UI KOMPONENTER
@@ -241,142 +243,113 @@ export default function App() {
     return sorted.map((p, i) => [i + 1, p.name, p.hcp, p.shcp, ...p.pointsPerRound, p.total, p.money]);
   };
 
-  const exportCompetitionPDF = (mode) => {
-	console.log("Export PDF mode:", mode); 
-  const isTotal = mode === "TOTAL";
-  const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
-  const marginX = isTotal ? 10 : 15;
-  let y = 18;
+const exportCompetitionPDF = (mode) => {
+  try {
+    console.log("Export PDF mode:", mode);
 
-  doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
-  doc.setFontSize(16);
-  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX + 34, y + 16);
-  y += 26;
+    const isTotal = mode === "TOTAL";
+    const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
+    const marginX = isTotal ? 10 : 15;
+    let y = 18;
 
-  const totalHead = [
-    "Plac",
-    "Namn",
-    "HCP",
-    "SHCP",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-    "Total",
-    "Pengar"
-  ];
+    // ⚠️ Kommentar bort loggan tills allt funkar stabilt
+    // doc.addImage(CLUB_LOGO, "PNG", marginX, y, 26, 26);
 
-  const classHead = ["Plac", "Namn", "HCP", "SHCP", "Netto", "Poäng", "Pengar"];
+    doc.setFontSize(16);
+    doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX + 34, y + 16);
+    y += 26;
 
-  const renderTable = (head, rows, pageIndex = 0) => {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: isTotal ? 8 : 9, cellPadding: 2 },
-	headStyles: {
-  	fillColor: [230, 230, 230],
-  	textColor: 20,
-  	fontStyle: "bold"
-	},
-      head: [head],
-      body: rows,
-      didDrawCell: (data) => {
-  if (
-    isTotal &&
-    data.section === "body" &&
-    data.row.index < 10 &&        // topp 10
-    data.table.pageNumber === 1  // endast första sidan
-  ) {
-    doc.setFont(undefined, "bold");
-  }
+    const totalHead = [
+      "Plac",
+      "Namn",
+      "HCP",
+      "SHCP",
+      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+      "Total",
+      "Pengar"
+    ];
 
-  // linje efter topp 10 (du har redan denna)
-  if (
-    isTotal &&
-    data.section === "body" &&
-    data.row.index === 9 &&
-    data.column.index === 0 &&
-    data.table.pageNumber === 1
-  ) {
-    const w = data.table.width;
-    doc.setLineWidth(0.5);
-    doc.line(
-      data.table.startX,
-      data.cell.y + data.cell.height,
-      data.table.startX + w,
-      data.cell.y + data.cell.height
-    );
-  }
-}
+    const classHead = ["Plac", "Namn", "HCP", "SHCP", "Netto", "Poäng", "Pengar"];
 
-    });
-    y = (doc.lastAutoTable?.finalY || y) + 10;
-  };
+    const renderTable = (head, rows) => {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginX, right: marginX },
+        styles: { fontSize: isTotal ? 8 : 9, cellPadding: 2 },
+        headStyles: {
+          fillColor: [230, 230, 230],
+          textColor: 20,
+          fontStyle: "bold"
+        },
+        head: [head],
+        body: rows
+      });
+      y = (doc.lastAutoTable?.finalY || y) + 10;
+    };
 
-if (mode === "TOTAL") {
-  console.log("TOTAL export startar");
+    // ===== TOTAL =====
+    if (mode === "TOTAL") {
+      console.log("TOTAL export startar");
 
-  const rows = buildTotalTableRows();
+      const rows = buildTotalTableRows();
+      if (!rows.length) {
+        alert("Ingen totalställning att exportera ännu.");
+        return;
+      }
 
-  if (!rows.length) {
-    alert("Ingen totalställning att exportera ännu.");
-    return;
-  }
+      const pages = chunk(rows, 25);
 
-  const pages = chunk(rows, 25);
+      pages.forEach((page, i) => {
+        if (i > 0) {
+          doc.addPage("a4", "l");
+          y = 18;
+        }
+        renderTable(totalHead, page);
+      });
 
-  pages.forEach((page, i) => {
-    if (i > 0) {
-      doc.addPage("a4", "l");
-      y = 18;
+      doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+      console.log("TOTAL export klar");
+      return;
     }
 
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 8, cellPadding: 2 },
-      head: [[
-        "Plac",
-        "Namn",
-        "HCP",
-        "SHCP",
-        ...Array.from({ length: ROUNDS }, (_, j) => `H#${j + 1}`),
-        "Total",
-        "Pengar"
-      ]],
-      body: page
-    });
+    // ===== A / B =====
+    if (mode === "A" || mode === "B") {
+      const rows = current.results
+        .filter(r => r.class === mode)
+        .map(r => [
+          r.net === 999 ? "❌" : r.place,
+          r.name,
+          r.hcp,
+          r.shcp,
+          r.net === 999 ? "" : r.net,
+          r.points,
+          r.place <= 4 ? (r.money || "") : ""
+        ]);
 
-    y = (doc.lastAutoTable?.finalY || y) + 10;
-  });
-
-  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-  console.log("TOTAL export klar");
-  return;
-}
-
-
-  if (mode === "A" || mode === "B") {
-    const rows = current.results
-      .filter(r => r.class === mode)
-      .map(r => [
-        r.net === 999 ? "❌" : r.place,
-        r.name,
-        r.hcp,
-        r.shcp,
-        r.net === 999 ? "" : r.net,
-        r.points,
-        r.place <= 4 ? (r.money || "") : ""
-      ]);
-
-    chunk(rows, 25).forEach((page, i) => {
-      if (i > 0) {
-        doc.addPage("a4", "p");
-        y = 18;
+      if (!rows.length) {
+        alert(`Inga resultat i klass ${mode} att exportera ännu.`);
+        return;
       }
-      renderTable(classHead, page, i);
-    });
 
-    doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
+      const pages = chunk(rows, 25);
+
+      pages.forEach((page, i) => {
+        if (i > 0) {
+          doc.addPage("a4", isTotal ? "l" : "p");
+          y = 18;
+        }
+        renderTable(classHead, page);
+      });
+
+      doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
+      console.log(`${mode} export klar`);
+    }
+  } catch (e) {
+    console.error("PDF export kraschade:", e);
+    alert("PDF-exporten kraschade. Kolla Console för detaljer.");
   }
 };
+
 
   // ================= UI =================
 
