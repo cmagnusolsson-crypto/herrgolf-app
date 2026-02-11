@@ -486,24 +486,27 @@ if (mode === "TOTAL") {
   const pages = chunk(totalRows, 25);
 
   pages.forEach((page, pageIndex) => {
+    // NYTT: alltid samma startlayout
     if (pageIndex > 0) {
       doc.addPage("a4", "l");
-      y = 8; // mindre toppmarginal
-      doc.setFontSize(13);
-      doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
-      y += 5;
     }
+
+    // Samma rubrikposition på ALLA sidor
+    y = 12; // samma värde varje gång (justera vid behov)
+    doc.setFontSize(16);
+    doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+    y += 8;
 
     autoTable(doc, {
       startY: y,
       margin: { left: marginX, right: marginX },
       styles: {
-        fontSize: 7,      // ännu lite mindre text
-        cellPadding: 1   // minimalt mellanrum
+        fontSize: 7.5,
+        cellPadding: 1
       },
       head: [totalHead],
       body: page,
-      rowPageBreak: "avoid",   // försök hålla rader ihop
+      rowPageBreak: "avoid",
       didParseCell: function (data) {
         // Topp 10 fetstil på första sidan
         if (
@@ -522,6 +525,7 @@ if (mode === "TOTAL") {
   doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
   return;
 }
+
 
   // ===== A / B =====
   const mapRows = (list) =>
