@@ -522,6 +522,12 @@ autoTable(doc, {
   body: totalRows,
 
   didParseCell: (data) => {
+    // 🔥 Fet stil för topp 10 (radindex 0–9)
+    if (data.section === "body" && data.row.index <= 9) {
+      data.cell.styles.fontStyle = "bold";
+    }
+
+    // ➖ Tjock svart linje under topp 25 (radindex 24)
     if (data.section === "body" && data.row.index === 24) {
       data.cell.styles.lineWidth = { bottom: 1.5 };
       data.cell.styles.lineColor = [0, 0, 0];
