@@ -483,49 +483,50 @@ const exportCompetitionPDF = (mode) => {
   // ===== TOTAL =====
 if (mode === "TOTAL") {
   const totalRows = buildTotalTableRows();
-  const pages = chunk(totalRows, 25);
 
-  pages.forEach((page, pageIndex) => {
-    // NYTT: alltid samma startlayout
-    if (pageIndex > 0) {
-      doc.addPage("a4", "l");
-    }
+  // Samma rubrik bara en gång (autoTable hanterar sidbrytning)
+  y = 12;
+  doc.setFontSize(16);
+  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+  y += 8;
 
-    // Samma rubrikposition på ALLA sidor
-    y = 12; // samma värde varje gång (justera vid behov)
-    doc.setFontSize(16);
-    doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
-    y += 8;
-
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: {
-        fontSize: 7.5,
-        cellPadding: 1
-      },
-      head: [totalHead],
-      body: page,
-      rowPageBreak: "avoid",
-      didParseCell: function (data) {
-        // Topp 10 fetstil på första sidan
-        if (
-          data.section === "body" &&
-          pageIndex === 0 &&
-          data.row.index < 10
-        ) {
-          data.cell.styles.fontStyle = "bold";
-        }
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 1
+    },
+    head: [totalHead],
+    body: totalRows,
+    didParseCell: function (data) {
+      // Fetstil för topp 10
+      if (data.section === "body" && data.row.index < 10) {
+        data.cell.styles.fontStyle = "bold";
       }
-    });
+    },
+    didDrawCell: function (data) {
+      // Rita en linje under plats 25
+      if (
+        data.section === "body" &&
+        data.row.index === 24 &&           // index 24 = plats 25
+        data.column.index === 0            // bara en gång per rad
+      ) {
+        const { table } = data;
+        const x1 = table.startX;
+        const x2 = table.startX + table.width;
+        const yLine = data.cell.y + data.cell.height;
 
-    y = doc.lastAutoTable.finalY + 6;
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.6);
+        doc.line(x1, yLine, x2, yLine);
+      }
+    }
   });
 
   doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
   return;
 }
-
 
   // ===== A / B =====
   const mapRows = (list) =>
