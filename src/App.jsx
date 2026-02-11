@@ -298,14 +298,18 @@ const updateMoney = (golfId, value) => {
         const list = part
           .filter(p => p.class === klass && p.net !== "")
           .sort((a, b) => {
-  		// Diskade (999) ska alltid hamna sist
-  		if (a.net === 999 && b.net === 999) return 0;
-  		if (a.net === 999) return 1;
-  		if (b.net === 999) return -1;
+  // Diskade (999) sist
+  if (a.net === 999 && b.net === 999) return 0;
+  if (a.net === 999) return 1;
+  if (b.net === 999) return -1;
 
-  		// Annars sortera på slag (lägst först)
-  		return a.net - b.net;
+  // 1) Netto (lägst först)
+  if (a.net !== b.net) return a.net - b.net;
+
+  // 2) TIE-BREAK: bästa HCP överst (lägst HCP vinner)
+  return a.hcp - b.hcp;
 });
+
 
 
         return list.map((p, idx) => ({
@@ -388,7 +392,10 @@ const buildTotalTableRows = () => {
       	players[res.golfId].pointsPerRound[roundIndex] = res.points;
 	players[res.golfId].total += res.points;
 	players[res.golfId].money += res.money || 0;
-	players[res.golfId].roundsPlayed += 1; // ✅
+	  if (res.points > 0) {
+ 			     players[res.golfId].roundsPlayed += 1;   // ✅ endast om man fått poäng
+	}
+
     });
   });
 
