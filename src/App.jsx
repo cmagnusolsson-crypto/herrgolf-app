@@ -520,7 +520,6 @@ if (mode === "TOTAL") {
       "Pengar"
     ]],
     body: totalRows,
-
     didDrawCell: (data) => {
       if (
         data.section === "body" &&
