@@ -453,6 +453,19 @@ const exportCompetitionPDF = (mode) => {
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   let y = 12;
+const logoImg = CLUB_LOGO;   // använder din befintliga URL
+
+const drawHeader = () => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const x = pageWidth - 30;   // 30mm från högerkanten
+  const y = 6;
+
+  try {
+    doc.addImage(logoImg, "PNG", x, y, 20, 20);
+  } catch (e) {
+    console.warn("Kunde inte ladda logga i PDF:", e);
+  }
+};
 
   // ===== Rubrik =====
   doc.setFontSize(16);
@@ -525,6 +538,9 @@ autoTable(doc, {
     },
   body: totalRows,
 
+ didDrawPage: () => {
+    drawHeader();
+  },
   didParseCell: (data) => {
     // 🔥 Fet stil för topp 10 (radindex 0–9)
     if (data.section === "body" && data.row.index <= 9) {
@@ -560,6 +576,10 @@ if (mode === "A") {
     },
     body: mapRows(classA),
 
+  didDrawPage: () => {
+      drawHeader();
+    },
+
     didParseCell: (data) => {
       // 🔥 Fet stil för topp 6 (radindex 0–5)
       if (data.section === "body" && data.row.index <= 5) {
@@ -591,6 +611,10 @@ if (mode === "B") {
       textColor: 255
     },
     body: mapRows(classB),
+
+  didDrawPage: () => {
+      drawHeader();
+    },
 
     didParseCell: (data) => {
       // 🔥 Fet stil för topp 6 (radindex 0–5)
