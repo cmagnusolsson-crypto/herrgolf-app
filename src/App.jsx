@@ -484,7 +484,7 @@ const exportCompetitionPDF = (mode) => {
 if (mode === "TOTAL") {
   const totalRows = buildTotalTableRows();
 
-  // Samma rubrik bara en gång (autoTable hanterar sidbrytning)
+  // Rubrik en gång – autoTable sköter sidbrytning
   y = 12;
   doc.setFontSize(16);
   doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
@@ -504,22 +504,11 @@ if (mode === "TOTAL") {
       if (data.section === "body" && data.row.index < 10) {
         data.cell.styles.fontStyle = "bold";
       }
-    },
-    didDrawCell: function (data) {
-      // Rita en linje under plats 25
-      if (
-        data.section === "body" &&
-        data.row.index === 24 &&           // index 24 = plats 25
-        data.column.index === 0            // bara en gång per rad
-      ) {
-        const { table } = data;
-        const x1 = table.startX;
-        const x2 = table.startX + table.width;
-        const yLine = data.cell.y + data.cell.height;
 
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.6);
-        doc.line(x1, yLine, x2, yLine);
+      // Extra bottenlinje för plats 25
+      if (data.section === "body" && data.row.index === 24) {
+        data.cell.styles.lineWidth = 0.6;
+        data.cell.styles.lineColor = [0, 0, 0];
       }
     }
   });
