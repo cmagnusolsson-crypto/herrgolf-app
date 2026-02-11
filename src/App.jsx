@@ -130,10 +130,6 @@ function assignClasses(players) {
 
 export default function App() {
 
-const logoImage = new Image();
-  logoImage.crossOrigin = "anonymous";
-  logoImage.src = CLUB_LOGO;
-
   const fileRef = useRef(null);
   const resultRef = useRef(null);
 
@@ -473,36 +469,19 @@ const exportCompetitionPDF = async (mode) => {
   const marginX = isTotal ? 10 : 15;
   let y = 12;
 
-  // ✅ ENDA drawHeader – ingen dublett
- const drawHeader = () => {
+  // ✅ ENDA drawHeader – async
+  const drawHeader = async () => {
     const pageWidth = doc.internal.pageSize.getWidth();
-    const x = pageWidth - 28;   // högerkanten
+    const x = pageWidth - 28;
     const yLogo = 6;
 
     try {
-      const base64Logo = await loadImageAsBase64(CLUB_LOGO);
+      const base64Logo = await loadImageAsBase64("/logo.png");
       doc.addImage(base64Logo, "PNG", x, yLogo, 20, 20);
     } catch (e) {
       console.warn("Kunde inte ladda logga i PDF:", e);
     }
   };
-
-const logoImg = CLUB_LOGO;   // använder din befintliga URL
-
-const drawHeader = () => {
-  if (!logoImage.complete) return; // vänta tills bilden laddats
-
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const x = pageWidth - 30;   // högerkant
-  const y = 6;
-
-  try {
-    doc.addImage(logoImage, "PNG", x, y, 20, 20);
-  } catch (e) {
-    console.warn("Kunde inte rita logga:", e);
-  }
-};
-
 
   // ===== Rubrik =====
 doc.setFontSize(16);
