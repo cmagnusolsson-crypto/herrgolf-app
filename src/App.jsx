@@ -474,7 +474,7 @@ const exportCompetitionPDF = async (mode) => {
   let y = 12;
 
   // ✅ ENDA drawHeader – ingen dublett
-  const drawHeader = async () => {
+ const drawHeader = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const x = pageWidth - 28;   // högerkanten
     const yLogo = 6;
