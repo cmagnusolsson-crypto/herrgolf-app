@@ -537,11 +537,11 @@ autoTable(doc, {
       doc.setLineWidth(1.2);
       doc.line(x1, yLine, x2, yLine);
     }
-  }
 });
 
 doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
 return;
+}
 
   // ===== KLASS A =====
   if (mode === "A") {
