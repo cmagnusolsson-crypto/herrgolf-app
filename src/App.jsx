@@ -450,12 +450,43 @@ const chunk = (arr, size) => {
   return res;
 };
 
-const exportCompetitionPDF = (mode) => {
+const loadImageAsBase64 = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+
+const exportCompetitionPDF = async (mode) => {
   const isTotal = mode === "TOTAL";
 
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   let y = 12;
+
+  // ✅ ENDA drawHeader – ingen dublett
+  const drawHeader = async () => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const x = pageWidth - 28;   // högerkanten
+    const yLogo = 6;
+
+    try {
+      const base64Logo = await loadImageAsBase64(CLUB_LOGO);
+      doc.addImage(base64Logo, "PNG", x, yLogo, 20, 20);
+    } catch (e) {
+      console.warn("Kunde inte ladda logga i PDF:", e);
+    }
+  };
+
 const logoImg = CLUB_LOGO;   // använder din befintliga URL
 
 const drawHeader = () => {
