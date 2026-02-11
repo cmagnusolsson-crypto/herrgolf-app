@@ -452,12 +452,14 @@ const exportCompetitionPDF = (mode) => {
 
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
-  let y = 18;
+  let y = 12;
 
-  // Titel
-  // doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
-  y += 26;
+  // ===== Rubrik (skriv EN gång) =====
+  doc.setFontSize(16);
+  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+  y += 8;
 
+  // ===== Rubriker =====
   const totalHead = [
     "Plac",
     "Namn",
@@ -479,61 +481,11 @@ const exportCompetitionPDF = (mode) => {
     "Pengar"
   ];
 
-  // ===== TOTAL =====
-if (mode === "TOTAL") {
-  const totalRows = buildTotalTableRows();
+  // ===== DATA =====
+  const classA = current.results.filter(r => r.class === "A");
+  const classB = current.results.filter(r => r.class === "B");
 
-  // Rubrik (bara en gång)
-  y = 12;
-  doc.setFontSize(16);
-  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
-  y += 8;
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX },
-    styles: {
-      fontSize: 7.5,
-      cellPadding: 1
-    },
-    head: [totalHead],
-    body: totalRows,
-
-    didParseCell: function (data) {
-      // Fetstil för topp 10
-      if (data.section === "body" && data.row.index < 10) {
-        data.cell.styles.fontStyle = "bold";
-      }
-    },
-
-    didDrawPage: function () {
-      // Ingenting här – låt autoTable sköta sidor
-    },
-
-    didDrawCell: function (data) {
-      // Rita EN svart linje under plats 25 (radindex 24)
-      if (
-        data.section === "body" &&
-        data.row.index === 24 &&
-        data.column.index === 0   // rita linjen bara en gång per rad
-      ) {
-        const x1 = data.table.startX;
-        const x2 = data.table.startX + data.table.width;
-        const yLine = data.cell.y + data.cell.height;
-
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.6);
-        doc.line(x1, yLine, x2, yLine);
-      }
-    }
-  });
-
-  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-  return;
-}
-
-  // ===== A / B =====
-  const mapRows = (list) =>
+  const mapRows = list =>
     list.map(r => [
       r.net === 999 ? "❌" : r.place,
       r.name,
@@ -544,32 +496,75 @@ if (mode === "TOTAL") {
       r.place <= 4 ? (r.money || "") : ""
     ]);
 
-  if (mode === "A" || mode === "B") {
-    const rows = mapRows(
-      current.results.filter(r => r.class === mode)
-    );
+  const totalRows = buildTotalTableRows();
 
-    chunk(rows, 25).forEach((page, pageIndex) => {
-      if (pageIndex > 0) {
-        doc.addPage("a4", "p");
-        y = 18;
-        doc.setFontSize(16);
-        doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
-        y += 10;
+  // ===== TOTAL =====
+  if (mode === "TOTAL") {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: {
+        fontSize: 7.5,
+        cellPadding: 1
+      },
+      head: [totalHead],
+      body: totalRows,
+
+      didParseCell: function (data) {
+        // Fetstil topp 10
+        if (data.section === "body" && data.row.index < 10) {
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+
+      didDrawCell: function (data) {
+        // Svart linje under plats 25 (index 24)
+        if (
+          data.section === "body" &&
+          data.row.index === 24 &&
+          data.column.index === 0
+        ) {
+          const x1 = data.table.startX;
+          const x2 = data.table.startX + data.table.width;
+          const yLine = data.cell.y + data.cell.height;
+
+          doc.setDrawColor(0);
+          doc.setLineWidth(0.6);
+          doc.line(x1, yLine, x2, yLine);
+        }
       }
-
-      autoTable(doc, {
-        startY: y,
-        margin: { left: marginX, right: marginX },
-        styles: { fontSize: 9, cellPadding: 2 },
-        head: [classHead],
-        body: page
-      });
-
-      y = doc.lastAutoTable.finalY + 10;
     });
 
-    doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
+    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+    return;
+  }
+
+  // ===== KLASS A =====
+  if (mode === "A") {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 9, cellPadding: 2 },
+      head: [classHead],
+      body: mapRows(classA)
+    });
+
+    doc.save(`herrgolf_A_${currentRound}.pdf`);
+    return;
+  }
+
+  // ===== KLASS B =====
+  if (mode === "B") {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 9, cellPadding: 2 },
+      head: [classHead],
+      body: mapRows(classB)
+    });
+
+    doc.save(`herrgolf_B_${currentRound}.pdf`);
+    return;
   }
 };
 
