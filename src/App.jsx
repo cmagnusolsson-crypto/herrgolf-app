@@ -131,6 +131,10 @@ function assignClasses(players) {
 
 export default function App() {
 
+const logoImage = new Image();
+  logoImage.crossOrigin = "anonymous";
+  logoImage.src = CLUB_LOGO;
+
   const fileRef = useRef(null);
   const resultRef = useRef(null);
 
@@ -456,16 +460,19 @@ const exportCompetitionPDF = (mode) => {
 const logoImg = CLUB_LOGO;   // använder din befintliga URL
 
 const drawHeader = () => {
+  if (!logoImage.complete) return; // vänta tills bilden laddats
+
   const pageWidth = doc.internal.pageSize.getWidth();
-  const x = pageWidth - 30;   // 30mm från högerkanten
+  const x = pageWidth - 30;   // högerkant
   const y = 6;
 
   try {
-    doc.addImage(logoImg, "PNG", x, y, 20, 20);
+    doc.addImage(logoImage, "PNG", x, y, 20, 20);
   } catch (e) {
-    console.warn("Kunde inte ladda logga i PDF:", e);
+    console.warn("Kunde inte rita logga:", e);
   }
 };
+
 
   // ===== Rubrik =====
   doc.setFontSize(16);
