@@ -456,7 +456,7 @@ const exportCompetitionPDF = (mode) => {
 
   // ===== Rubrik =====
   doc.setFontSize(16);
-  doc.text(`Herrgolf Totalställning`, marginX, y);
+  doc.text(`Totalställning herrgolf 2026`, marginX, y);
   y += 8;
 
   const totalHead = [
