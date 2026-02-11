@@ -446,6 +446,8 @@ const chunk = (arr, size) => {
   return res;
 };
 
+let cachedLogoBase64 = null;
+
 const loadImageAsBase64 = (url) =>
   new Promise((resolve, reject) => {
     const img = new Image();
@@ -469,37 +471,48 @@ const exportCompetitionPDF = async (mode) => {
   const marginX = isTotal ? 10 : 15;
   let y = 12;
 
-  // ✅ ENDA drawHeader – async
-  const drawHeader = async () => {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const x = pageWidth - 28;
-    const yLogo = 6;
+// 🔥 Ladda logga EN gång innan PDF skapas
+if (!cachedLogoBase64) {
+  try {
+    cachedLogoBase64 = await loadImageAsBase64("/logo.png");
+  } catch (e) {
+    console.warn("Kunde inte ladda logga i PDF:", e);
+  }
+}
 
-    try {
-      const base64Logo = await loadImageAsBase64("/logo.png");
-      doc.addImage(base64Logo, "PNG", x, yLogo, 20, 20);
-    } catch (e) {
-      console.warn("Kunde inte ladda logga i PDF:", e);
-    }
-  };
+// ✅ drawHeader måste ligga EFTER att doc skapats
+const drawHeader = () => {
+  if (!cachedLogoBase64) return;
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const x = pageWidth - 28;
+  const yLogo = 6;
+
+  doc.addImage(cachedLogoBase64, "PNG", x, yLogo, 20, 20);
+};
+
+// 👇 RITA LOGGAN PÅ FÖRSTA SIDAN DIREKT
+drawHeader();
+
 
   // ===== Rubrik =====
-doc.setFontSize(16);
+  doc.setFontSize(16);
 
-if (mode === "TOTAL") {
-  doc.text(`Totalställning – Herrgolf 2026`, marginX, y);
-}
+  if (mode === "TOTAL") {
+    doc.text(`Totalställning – Herrgolf 2026`, marginX, y);
+  }
 
-if (mode === "A") {
-  doc.text(`Resultat – Klass A – Herrgolf #${currentRound}`, marginX, y);
-}
+  if (mode === "A") {
+    doc.text(`Resultat – Klass A – Herrgolf #${currentRound}`, marginX, y);
+  }
 
-if (mode === "B") {
-  doc.text(`Resultat – Klass B – Herrgolf #${currentRound}`, marginX, y);
-}
+  if (mode === "B") {
+    doc.text(`Resultat – Klass B – Herrgolf #${currentRound}`, marginX, y);
+  }
 
-y += 8;
+  y += 8;
 
+  // 👇 autoTable + didDrawPage: () => drawHeader()
 
   const totalHead = [
     "Plac",
