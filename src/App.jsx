@@ -507,70 +507,42 @@ if (mode === "TOTAL") {
     return;
   }
 
-autoTable(doc, {
-  startY: y,
-  margin: { left: marginX, right: marginX },
-  styles: { fontSize: 7.5, cellPadding: 1 },
-  head: [[
-    "Plac",
-    "Namn",
-    "HCP",
-    "SHCP",
-    "Delt.",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-    "Total",
-    "Pengar"
-  ]],
-  body: totalRows,
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 7.5, cellPadding: 1 },
+    head: [[
+      "Plac",
+      "Namn",
+      "HCP",
+      "SHCP",
+      "Delt.",
+      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+      "Total",
+      "Pengar"
+    ]],
+    body: totalRows,
 
-  didDrawCell: function (data) {
-    if (
-      data.section === "body" &&
-      data.row.index === 24 &&
-      data.column.index === 0
-    ) {
-      const x1 = data.table.startX;
-      const x2 = data.table.startX + data.table.width;
-      const yLine = data.cell.y + data.cell.height;
+    didDrawCell: function (data) {
+      if (
+        data.section === "body" &&
+        data.row.index === 24 &&
+        data.column.index === 0
+      ) {
+        const x1 = data.table.startX;
+        const x2 = data.table.startX + data.table.width;
+        const yLine = data.cell.y + data.cell.height;
 
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(1.2);
-      doc.line(x1, yLine, x2, yLine);
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(1.5);   // 👈 tjockare linje
+        doc.line(x1, yLine, x2, yLine);
+      }
     }
-});
+  });
 
-doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-return;
+  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  return;
 }
-
-  // ===== KLASS A =====
-  if (mode === "A") {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9, cellPadding: 2 },
-      head: [classHead],
-      body: mapRows(classA)
-    });
-
-    doc.save(`herrgolf_A_${currentRound}.pdf`);
-    return;
-  }
-
-  // ===== KLASS B =====
-  if (mode === "B") {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9, cellPadding: 2 },
-      head: [classHead],
-      body: mapRows(classB)
-    });
-
-    doc.save(`herrgolf_B_${currentRound}.pdf`);
-    return;
-  }
-};
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
 
