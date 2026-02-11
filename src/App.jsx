@@ -495,41 +495,52 @@ const exportCompetitionPDF = (mode) => {
     ]);
 
   // ===== TOTAL =====
-  if (mode === "TOTAL") {
-    const totalRows = buildTotalTableRows();
+if (mode === "TOTAL") {
+  const totalRows = buildTotalTableRows();
 
-    if (!totalRows.length) {
-      alert("Ingen totalställning att exportera ännu.");
-      return;
-    }
+  console.log("TOTAL ROWS:", totalRows.length);
 
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 7.5, cellPadding: 1 },
-      head: [totalHead],
-      body: totalRows,
-
-      didDrawCell: function (data) {
-        if (
-          data.section === "body" &&
-          data.row.index === 24 &&
-          data.column.index === 0
-        ) {
-          const x1 = data.table.startX;
-          const x2 = data.table.startX + data.table.width;
-          const yLine = data.cell.y + data.cell.height;
-
-          doc.setDrawColor(0, 0, 0);
-          doc.setLineWidth(1.5); // tjock linje
-          doc.line(x1, yLine, x2, yLine);
-        }
-      }
-    });
-
-    doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  if (!totalRows || totalRows.length === 0) {
+    alert("Ingen totalställning att exportera ännu.");
     return;
   }
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 7.5, cellPadding: 1 },
+    head: [[
+      "Plac",
+      "Namn",
+      "HCP",
+      "SHCP",
+      "Delt.",
+      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+      "Total",
+      "Pengar"
+    ]],
+    body: totalRows,
+
+    didDrawCell: (data) => {
+      if (
+        data.section === "body" &&
+        data.row.index === 24 &&
+        data.column.index === 0
+      ) {
+        const x1 = data.table.startX;
+        const x2 = data.table.startX + data.table.width;
+        const yLine = data.cell.y + data.cell.height;
+
+        doc.setDrawColor(0);
+        doc.setLineWidth(1.5);
+        doc.line(x1, yLine, x2, yLine);
+      }
+    }
+  });
+
+  doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
+  return;
+}
 
   // ===== KLASS A =====
   if (mode === "A") {
