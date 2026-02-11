@@ -519,6 +519,10 @@ autoTable(doc, {
     "Total",
     "Pengar"
   ]],
+ headStyles: {
+      fillColor: [15, 109, 59],   // Hammarö GK mörkgrön
+      textColor: 255
+    },
   body: totalRows,
 
   didParseCell: (data) => {
@@ -526,7 +530,11 @@ autoTable(doc, {
     if (data.section === "body" && data.row.index <= 9) {
       data.cell.styles.fontStyle = "bold";
     }
-
+    // ➖ Tjock linje under topp 10 (radindex 9)
+    if (data.section === "body" && data.row.index === 9) {
+      data.cell.styles.lineWidth = { bottom: 1.5 };
+      data.cell.styles.lineColor = [0, 0, 0];
+    }
     // ➖ Tjock svart linje under topp 25 (radindex 24)
     if (data.section === "body" && data.row.index === 24) {
       data.cell.styles.lineWidth = { bottom: 1.5 };
@@ -540,32 +548,68 @@ autoTable(doc, {
 }
 
   // ===== KLASS A =====
-  if (mode === "A") {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9, cellPadding: 2 },
-      head: [classHead],
-      body: mapRows(classA)
-    });
+if (mode === "A") {
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 7.5, cellPadding: 1 },
+    head: [classHead],
+    headStyles: {
+      fillColor: [15, 109, 59],   // Hammarö GK mörkgrön
+      textColor: 255
+    },
+    body: mapRows(classA),
 
-    doc.save(`herrgolf_A_${currentRound}.pdf`);
-    return;
-  }
+    didParseCell: (data) => {
+      // 🔥 Fet stil för topp 6 (radindex 0–5)
+      if (data.section === "body" && data.row.index <= 5) {
+        data.cell.styles.fontStyle = "bold";
+      }
+
+      // ➖ Tjock linje under topp 6 (radindex 5)
+      if (data.section === "body" && data.row.index === 5) {
+        data.cell.styles.lineWidth = { bottom: 1.5 };
+        data.cell.styles.lineColor = [0, 0, 0];
+      }
+    }
+  });
+
+  doc.save(`herrgolf_A_${currentRound}.pdf`);
+  return;
+}
+
 
   // ===== KLASS B =====
-  if (mode === "B") {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9, cellPadding: 2 },
-      head: [classHead],
-      body: mapRows(classB)
-    });
+if (mode === "B") {
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 7.5, cellPadding: 1 },
+    head: [classHead],
+ headStyles: {
+      fillColor: [15, 109, 59],   // Hammarö GK mörkgrön
+      textColor: 255
+    },
+    body: mapRows(classB),
 
-    doc.save(`herrgolf_B_${currentRound}.pdf`);
-    return;
-  }
+    didParseCell: (data) => {
+      // 🔥 Fet stil för topp 6 (radindex 0–5)
+      if (data.section === "body" && data.row.index <= 5) {
+        data.cell.styles.fontStyle = "bold";
+      }
+
+      // ➖ Tjock linje under topp 6 (radindex 5)
+      if (data.section === "body" && data.row.index === 5) {
+        data.cell.styles.lineWidth = { bottom: 1.5 };
+        data.cell.styles.lineColor = [0, 0, 0];
+      }
+    }
+  });
+
+  doc.save(`herrgolf_B_${currentRound}.pdf`);
+  return;
+}
+
 };
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
