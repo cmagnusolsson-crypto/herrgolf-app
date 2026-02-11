@@ -450,22 +450,13 @@ const chunk = (arr, size) => {
 const exportCompetitionPDF = (mode) => {
   const isTotal = mode === "TOTAL";
 
-  const doc = new jsPDF(
-    isTotal ? "l" : "p",
-    "mm",
-    "a4"
-  );
-
+  const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
   let y = 18;
 
-  // TITEL
+  // Titel
   doc.setFontSize(16);
-  doc.text(
-    `Hammarö GK – Herrgolf #${currentRound}`,
-    marginX,
-    y
-  );
+  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
   y += 10;
 
   const totalHead = [
@@ -489,68 +480,46 @@ const exportCompetitionPDF = (mode) => {
     "Pengar"
   ];
 
-  const renderTable = (head, rows, pageIndex) => {
-    autoTable(doc, {
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      styles: {
-        fontSize: isTotal ? 8 : 9,
-        cellPadding: 2
-      },
-      head: [head],
-      body: rows,
-
-      didDrawCell: (data) => {
-        // 🏆 Markera topp 10 (endast TOTAL, endast sida 1)
-        if (
-          isTotal &&
-          data.section === "body" &&
-          data.row.index < 10 &&
-          data.table.pageNumber === 1
-        ) {
-          doc.setFont(undefined, "bold");
-        }
-
-        // ➖ Linje efter topp 10 (endast TOTAL, endast sida 1)
-        if (
-          isTotal &&
-          data.section === "body" &&
-          data.row.index === 9 &&
-          data.column.index === 0 &&
-          data.table.pageNumber === 1
-        ) {
-          const w = data.table.width;
-          doc.setLineWidth(0.5);
-          doc.line(
-            data.table.startX,
-            data.cell.y + data.cell.height,
-            data.table.startX + w,
-            data.cell.y + data.cell.height
-          );
-        }
-      }
-    });
-
-    y = doc.lastAutoTable.finalY + 10;
-  };
-
-  // ===== DATA =====
+  // ===== TOTAL =====
   if (mode === "TOTAL") {
     const totalRows = buildTotalTableRows();
     const pages = chunk(totalRows, 25);
 
-    pages.forEach((page, i) => {
-      if (i > 0) {
+    pages.forEach((page, pageIndex) => {
+      if (pageIndex > 0) {
         doc.addPage("a4", "l");
         y = 18;
+        doc.setFontSize(16);
+        doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+        y += 10;
       }
-      renderTable(totalHead, page, i);
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginX, right: marginX },
+        styles: { fontSize: 8, cellPadding: 2 },
+        head: [totalHead],
+        body: page,
+        didParseCell: function (data) {
+          // Topp 10 i fetstil (endast sida 1)
+          if (
+            data.section === "body" &&
+            pageIndex === 0 &&
+            data.row.index < 10
+          ) {
+            data.cell.styles.fontStyle = "bold";
+          }
+        }
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
     });
 
     doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
     return;
   }
 
+  // ===== A / B =====
   const mapRows = (list) =>
     list.map(r => [
       r.net === 999 ? "❌" : r.place,
@@ -567,20 +536,29 @@ const exportCompetitionPDF = (mode) => {
       current.results.filter(r => r.class === mode)
     );
 
-    chunk(rows, 25).forEach((page, i) => {
-      if (i > 0) {
+    chunk(rows, 25).forEach((page, pageIndex) => {
+      if (pageIndex > 0) {
         doc.addPage("a4", "p");
         y = 18;
+        doc.setFontSize(16);
+        doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+        y += 10;
       }
-      renderTable(classHead, page, i);
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginX, right: marginX },
+        styles: { fontSize: 9, cellPadding: 2 },
+        head: [classHead],
+        body: page
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
     });
 
     doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
   }
 };
-
-
-
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
 
