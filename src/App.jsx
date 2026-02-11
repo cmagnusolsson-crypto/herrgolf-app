@@ -456,7 +456,7 @@ const exportCompetitionPDF = (mode) => {
 
   // ===== Rubrik =====
   doc.setFontSize(16);
-  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX, y);
+  doc.text(`Herrgolf Totalställning`, marginX, y);
   y += 8;
 
   const totalHead = [
@@ -505,37 +505,29 @@ if (mode === "TOTAL") {
     return;
   }
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: marginX, right: marginX },
-    styles: { fontSize: 7.5, cellPadding: 1 },
-    head: [[
-      "Plac",
-      "Namn",
-      "HCP",
-      "SHCP",
-      "Delt.",
-      ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-      "Total",
-      "Pengar"
-    ]],
-    body: totalRows,
-    didDrawCell: (data) => {
-      if (
-        data.section === "body" &&
-        data.row.index === 24 &&
-        data.column.index === 0
-      ) {
-        const x1 = data.table.startX;
-        const x2 = data.table.startX + data.table.width;
-        const yLine = data.cell.y + data.cell.height;
+autoTable(doc, {
+  startY: y,
+  margin: { left: marginX, right: marginX },
+  styles: { fontSize: 7.5, cellPadding: 1 },
+  head: [[
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    "Delt.",
+    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    "Total",
+    "Pengar"
+  ]],
+  body: totalRows,
 
-        doc.setDrawColor(0);
-        doc.setLineWidth(1.5);
-        doc.line(x1, yLine, x2, yLine);
-      }
+  didParseCell: (data) => {
+    if (data.section === "body" && data.row.index === 24) {
+      data.cell.styles.lineWidth = { bottom: 1.5 };
+      data.cell.styles.lineColor = [0, 0, 0];
     }
-  });
+  }
+});
 
   doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
   return;
