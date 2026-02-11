@@ -471,6 +471,8 @@ const exportCompetitionPDF = async (mode) => {
   const marginX = isTotal ? 10 : 15;
   let y = 12;
 
+const HEADER_HEIGHT = 28; // 👈 justera 26–30 tills det känns perfekt
+
 // 🔥 Ladda logga EN gång innan PDF skapas
 if (!cachedLogoBase64) {
   try {
@@ -565,7 +567,7 @@ if (mode === "TOTAL") {
   }
 
 autoTable(doc, {
-  startY: y,
+  startY: Math.max(y, HEADER_HEIGHT),
   margin: { left: marginX, right: marginX },
   styles: { fontSize: 7.5, cellPadding: 1 },
   head: [[
@@ -612,7 +614,7 @@ autoTable(doc, {
   // ===== KLASS A =====
 if (mode === "A") {
   autoTable(doc, {
-    startY: y,
+    startY: Math.max(y, HEADER_HEIGHT),
     margin: { left: marginX, right: marginX },
     styles: { fontSize: 7.5, cellPadding: 1 },
     head: [classHead],
@@ -648,7 +650,7 @@ if (mode === "A") {
   // ===== KLASS B =====
 if (mode === "B") {
   autoTable(doc, {
-    startY: y,
+    startY: Math.max(y, HEADER_HEIGHT),
     margin: { left: marginX, right: marginX },
     styles: { fontSize: 7.5, cellPadding: 1 },
     head: [classHead],
