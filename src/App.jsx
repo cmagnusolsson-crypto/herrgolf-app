@@ -242,39 +242,74 @@ export default function App() {
   };
 
   const exportCompetitionPDF = (mode) => {
-    const isTotal = mode === "TOTAL";
-    const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
-    const marginX = isTotal ? 10 : 15;
-    let y = 18;
+  const isTotal = mode === "TOTAL";
+  const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
+  const marginX = isTotal ? 10 : 15;
+  let y = 18;
 
-    doc.addImage("/logo-192.png", "PNG", marginX, y, 26, 26);
-    doc.setFontSize(16);
-    doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX + 34, y + 16);
-    y += 26;
+  doc.addImage("/logo-192.png", "PNG", marginX, y, 26, 26);
+  doc.setFontSize(16);
+  doc.text(`Hammarö GK – Herrgolf #${currentRound}`, marginX + 34, y + 16);
+  y += 26;
 
-    const totalHead = ["Plac", "Namn", "HCP", "SHCP", ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`), "Total", "Pengar"];
-    const classHead = ["Plac", "Namn", "HCP", "SHCP", "Netto", "Poäng", "Pengar"];
+  const totalHead = [
+    "Plac",
+    "Namn",
+    "HCP",
+    "SHCP",
+    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    "Total",
+    "Pengar"
+  ];
 
-    const renderTable = (head, rows, pageIndex = 0) => {
-      autoTable(doc, {
-        startY: y,
-        margin: { left: marginX, right: marginX },
-        styles: { fontSize: isTotal ? 8 : 9, cellPadding: 2 },
-        head: [head],
-        body: rows,
-        didDrawCell: (data) => {
-          if (isTotal && pageIndex === 0 && data.section === "body" && data.row.index === 9 && data.column.index === 0) {
-            const w = data.table.width;
-            doc.setLineWidth(0.5);
-            doc.line(data.table.startX, data.cell.y + data.cell.height, data.table.startX + w, data.cell.y + data.cell.height);
-          }
-        }
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    };
+  const classHead = ["Plac", "Namn", "HCP", "SHCP", "Netto", "Poäng", "Pengar"];
 
-    if (mode === "TOTAL") {
-  try {
+  const renderTable = (head, rows, pageIndex = 0) => {
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: isTotal ? 8 : 9, cellPadding: 2 },
+	headStyles: {
+  	fillColor: [230, 230, 230],
+  	textColor: 20,
+  	fontStyle: "bold"
+	},
+      head: [head],
+      body: rows,
+      didDrawCell: (data) => {
+  if (
+    isTotal &&
+    data.section === "body" &&
+    data.row.index < 10 &&        // topp 10
+    data.table.pageNumber === 1  // endast första sidan
+  ) {
+    doc.setFont(undefined, "bold");
+  }
+
+  // linje efter topp 10 (du har redan denna)
+  if (
+    isTotal &&
+    data.section === "body" &&
+    data.row.index === 9 &&
+    data.column.index === 0 &&
+    data.table.pageNumber === 1
+  ) {
+    const w = data.table.width;
+    doc.setLineWidth(0.5);
+    doc.line(
+      data.table.startX,
+      data.cell.y + data.cell.height,
+      data.table.startX + w,
+      data.cell.y + data.cell.height
+    );
+  }
+}
+
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  };
+
+  if (mode === "TOTAL") {
     const rows = buildTotalTableRows();
     const pages = chunk(rows, 25);
 
@@ -283,52 +318,17 @@ export default function App() {
         doc.addPage("a4", "l");
         y = 18;
       }
-
-      autoTable(doc, {
-        startY: y,
-        margin: { left: marginX, right: marginX },
-        styles: { fontSize: 8, cellPadding: 2 },
-        head: [[
-          "Plac",
-          "Namn",
-          "HCP",
-          "SHCP",
-          ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
-          "Total",
-          "Pengar"
-        ]],
-        body: page,
-
-        didDrawCell: (data) => {
-          if (
-            i === 0 &&
-            data.section === "body" &&
-            data.row.index === 9 &&
-            data.column.index === 0
-          ) {
-            const w = data.table.width;
-            doc.setLineWidth(0.5);
-            doc.line(
-              data.table.startX,
-              data.cell.y + data.cell.height,
-              data.table.startX + w,
-              data.cell.y + data.cell.height
-            );
-          }
-        }
-      });
+      renderTable(totalHead, page, i);
     });
 
     doc.save(`herrgolf_TOTAL_${currentRound}.pdf`);
-  } catch (err) {
-    console.error("TOTAL PDF error:", err);
-    alert("❌ Fel vid skapande av TOTAL-PDF. Se console.");
+    return; // ✅ viktigt: stoppa här så vi INTE sparar igen
   }
-}
 
-
-    if (mode === "A" || mode === "B") {
-      const rows = current.results.filter(r => r.class === mode).map(r => [
+  if (mode === "A" || mode === "B") {
+    const rows = current.results
+      .filter(r => r.class === mode)
+      .map(r => [
         r.net === 999 ? "❌" : r.place,
         r.name,
         r.hcp,
@@ -337,14 +337,18 @@ export default function App() {
         r.points,
         r.place <= 4 ? (r.money || "") : ""
       ]);
-      chunk(rows, 25).forEach((page, i) => {
-        if (i > 0) { doc.addPage("a4", "p"); y = 18; }
-        renderTable(classHead, page, i);
-      });
-    }
+
+    chunk(rows, 25).forEach((page, i) => {
+      if (i > 0) {
+        doc.addPage("a4", "p");
+        y = 18;
+      }
+      renderTable(classHead, page, i);
+    });
 
     doc.save(`herrgolf_${mode}_${currentRound}.pdf`);
-  };
+  }
+};
 
   // ================= UI =================
 
