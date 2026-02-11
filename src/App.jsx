@@ -471,7 +471,7 @@ const exportCompetitionPDF = async (mode) => {
   const marginX = isTotal ? 10 : 15;
   let y = 12;
 
-const HEADER_HEIGHT = 28; // 👈 justera 26–30 tills det känns perfekt
+const HEADER_HEIGHT = 30; // 👈 justera 26–30 tills det känns perfekt
 
 // 🔥 Ladda logga EN gång innan PDF skapas
 if (!cachedLogoBase64) {
@@ -568,7 +568,11 @@ if (mode === "TOTAL") {
 
 autoTable(doc, {
   startY: Math.max(y, HEADER_HEIGHT),
-  margin: { left: marginX, right: marginX },
+  margin: {
+    left: marginX,
+    right: marginX,
+    top: HEADER_HEIGHT   // 🔥 Detta gäller för sida 2, 3, 4...
+  },
   styles: { fontSize: 7.5, cellPadding: 1 },
   head: [[
     "Plac",
@@ -613,9 +617,13 @@ autoTable(doc, {
 
   // ===== KLASS A =====
 if (mode === "A") {
-  autoTable(doc, {
-    startY: Math.max(y, HEADER_HEIGHT),
-    margin: { left: marginX, right: marginX },
+ autoTable(doc, {
+  startY: Math.max(y, HEADER_HEIGHT),
+  margin: {
+    left: marginX,
+    right: marginX,
+    top: HEADER_HEIGHT   // 🔥 Detta gäller för sida 2, 3, 4...
+  },
     styles: { fontSize: 7.5, cellPadding: 1 },
     head: [classHead],
     headStyles: {
@@ -649,9 +657,13 @@ if (mode === "A") {
 
   // ===== KLASS B =====
 if (mode === "B") {
-  autoTable(doc, {
-    startY: Math.max(y, HEADER_HEIGHT),
-    margin: { left: marginX, right: marginX },
+autoTable(doc, {
+  startY: Math.max(y, HEADER_HEIGHT),
+  margin: {
+    left: marginX,
+    right: marginX,
+    top: HEADER_HEIGHT   // 🔥 Detta gäller för sida 2, 3, 4...
+  },
     styles: { fontSize: 7.5, cellPadding: 1 },
     head: [classHead],
  headStyles: {
