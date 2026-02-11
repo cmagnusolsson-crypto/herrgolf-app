@@ -469,9 +469,12 @@ const exportCompetitionPDF = async (mode) => {
 
   const doc = new jsPDF(isTotal ? "l" : "p", "mm", "a4");
   const marginX = isTotal ? 10 : 15;
-  let y = 12;
+  const TITLE_Y = 26;   // 👈 rubriken hamnar snyggt under loggan
+const TABLE_Y = 34;  // 👈 gröna rubriker startar strax under rubriken
+let y = TABLE_Y;
 
-const HEADER_HEIGHT = 30; // 👈 justera 26–30 tills det känns perfekt
+
+const HEADER_HEIGHT = 38; // 👈 justera 26–30 tills det känns perfekt
 
 // 🔥 Ladda logga EN gång innan PDF skapas
 if (!cachedLogoBase64) {
@@ -487,36 +490,27 @@ const drawHeader = () => {
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  const logoSize = 14;      // 👈 MINDRE LOGGA (testa 10–14)
-  const paddingRight = 10; // 👈 lite luft från kanten
-  const yLogo = 6;         // 👈 höjd från toppen
-
+  const logoSize = 16;
+  const paddingRight = 10;
+  const yLogo = 6;
   const x = pageWidth - logoSize - paddingRight;
 
   doc.addImage(cachedLogoBase64, "PNG", x, yLogo, logoSize, logoSize);
-};
 
-
-// 👇 RITA LOGGAN PÅ FÖRSTA SIDAN DIREKT
-drawHeader();
-
-
-  // ===== Rubrik =====
+  // 👇 Rubrik på varje sida
   doc.setFontSize(16);
 
   if (mode === "TOTAL") {
-    doc.text(`Totalställning – Herrgolf 2026`, marginX, y);
+    doc.text(`Totalställning – Herrgolf 2026`, marginX, TITLE_Y);
   }
-
   if (mode === "A") {
-    doc.text(`Resultat – Klass A – Herrgolf #${currentRound}`, marginX, y);
+    doc.text(`Resultat – Klass A – Herrgolf #${currentRound}`, marginX, TITLE_Y);
   }
-
   if (mode === "B") {
-    doc.text(`Resultat – Klass B – Herrgolf #${currentRound}`, marginX, y);
+    doc.text(`Resultat – Klass B – Herrgolf #${currentRound}`, marginX, TITLE_Y);
   }
+};
 
-  y += 8;
 
   // 👇 autoTable + didDrawPage: () => drawHeader()
 
