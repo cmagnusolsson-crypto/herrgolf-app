@@ -94,7 +94,7 @@ const GOLF_ID_REGEX = /^\d{6}-\d{3}$/;
    HJÄLPFUNKTIONER
 ===================================================== */
 
-const calculatePoints = (place, net) => {
+const calculatePoints = (place, net, roundNumber) => {
   const p = Number(net);
 
   // Diskad
@@ -106,11 +106,18 @@ const calculatePoints = (place, net) => {
     return top6[place - 1];
   }
 
-  // Från plats 7 och ≤ 75 slag
-  if (p <= 75) return 2;
+  // Rond 14–16 spelas över 9 hål
+  // Plats 7 och nedåt:
+  // 38 slag eller bättre = 2 poäng
+  // över 38 slag = 1 poäng
+  if (roundNumber >= 14 && roundNumber <= 16) {
+    return p <= 38 ? 2 : 1;
+  }
 
-  // Över 75 slag
-  return 1;
+  // Rond 1–13, 18 hål
+  // 75 slag eller bättre = 2 poäng
+  // över 75 slag = 1 poäng
+  return p <= 75 ? 2 : 1;
 };
 
 
@@ -314,7 +321,7 @@ const updateMoney = (golfId, value) => {
         return list.map((p, idx) => ({
  	  ...p,
   	  place: idx + 1,
-  	  points: calculatePoints(idx + 1, p.net),
+  	  points: calculatePoints(idx + 1, p.net, currentRound),
   	  prize: 0   // pengar sätts manuellt i UI
 	}));
 
