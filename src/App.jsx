@@ -78,7 +78,7 @@ const Input = (props) => (
    KONFIG
 ===================================================== */
 
-const ROUNDS = 16;
+const ROUNDS = 17;
 const STORAGE_KEY = "herrgolf_state";
 const BACKUP_KEY = "herrgolf_backup";
 
@@ -87,7 +87,8 @@ const CLUB_PRIMARY = "#0f6d3b";
 const CLUB_LOGO = "/logo.png";
 
 const ADMIN_PASSWORD = "HammaroGK26";
-const roundName = (n) => `Herrgolf #${n}`;
+const roundName = (n) =>
+  n === 17 ? "Shoot-Out" : `Herrgolf #${n}`;
 const GOLF_ID_REGEX = /^\d{6}-\d{3}$/;
 
 /* =====================================================
@@ -121,6 +122,24 @@ const calculatePoints = (place, net, roundNumber) => {
 };
 
 
+// ===== SHOOT-OUT POÄNG =====
+const calculateShootOutPoints = (place) => {
+  const p = Number(place);
+
+  if (p === 1) return 15;
+  if (p === 2) return 12;
+  if (p >= 3 && p <= 4) return 10;
+  if (p >= 5 && p <= 6) return 8;
+  if (p >= 7 && p <= 8) return 6;
+  if (p >= 9 && p <= 12) return 4;
+  if (p >= 13 && p <= 16) return 3;
+  if (p >= 17 && p <= 20) return 2;
+  if (p >= 21 && p <= 25) return 1;
+
+  return 0;
+};
+
+
 function assignClasses(players) {
   const sorted = [...players].sort((a, b) => a.hcp - b.hcp);
   const half = Math.ceil(sorted.length / 2);
@@ -149,6 +168,7 @@ export default function App() {
 
   // ✅ Flytta hit denna
   const [rounds, setRounds] = useState(emptyRounds);
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
 const restoreBackup = () => {
   const ok = window.confirm(
@@ -225,20 +245,63 @@ const updateMoney = (golfId, value) => {
 
   /* ================= LAGRING ================= */
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("view") === "player") setPlayerView(true);
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("view") === "player") setPlayerView(true);
 
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const backup = localStorage.getItem(BACKUP_KEY);
-    if (saved) setRounds(JSON.parse(saved));
-    else if (backup) setRounds(JSON.parse(backup));
-  }, []);
+  const saved = localStorage.getItem(STORAGE_KEY);
+  const backup = localStorage.getItem(BACKUP_KEY);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds));
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(rounds));
-  }, [rounds]);
+  let loadedRounds = null;
+
+  try {
+    if (saved) {
+      loadedRounds = JSON.parse(saved);
+    } else if (backup) {
+      loadedRounds = JSON.parse(backup);
+    }
+  } catch (error) {
+    console.error("Kunde inte läsa sparad tävlingsdata:", error);
+  }
+
+  if (Array.isArray(loadedRounds)) {
+    // Behåll all gammal data och lägg till tomma rundor om det saknas,
+    // exempelvis när vi går från 16 till 17 rundor.
+    const normalizedRounds = Array.from(
+      { length: ROUNDS },
+      (_, index) => {
+        if (loadedRounds[index]) {
+          return {
+            participants: [],
+            results: [],
+            locked: false,
+            prizes: { A: [], B: [] },
+            ...loadedRounds[index]
+          };
+        }
+
+        return {
+          participants: [],
+          results: [],
+          locked: false,
+          prizes: { A: [], B: [] }
+        };
+      }
+    );
+
+    setRounds(normalizedRounds);
+  }
+
+  setStorageLoaded(true);
+}, []);
+
+useEffect(() => {
+  // Spara inte innan gammal data har lästs in.
+  if (!storageLoaded) return;
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(rounds));
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(rounds));
+}, [rounds, storageLoaded]);
 
   /* ================= EXCEL ================= */
 
@@ -299,6 +362,24 @@ const updateMoney = (golfId, value) => {
     setRounds(prev => {
       const copy = [...prev];
       const part = copy[currentRound - 1].participants;
+
+// ===== SHOOT-OUT – OMGÅNG 17 =====
+if (currentRound === 17) {
+  const shootOutResults = part
+    .filter(p => p.net !== "")
+    .map(p => ({
+      ...p,
+      place: Number(p.net),
+      points: calculateShootOutPoints(Number(p.net)),
+      class: "SO",
+      money: 0
+    }))
+    .filter(p => p.place >= 1 && p.place <= 25)
+    .sort((a, b) => a.place - b.place);
+
+  copy[currentRound - 1].results = shootOutResults;
+  return copy;
+}
 
       const results = ["A","B"].flatMap(klass => {
         const list = part
@@ -381,16 +462,23 @@ const updateMoney = (golfId, value) => {
 
   /* ================= EXPORT ================= */
 
-  const exportExcel = () => {
-    const wb = XLSX.utils.book_new();
-    rounds.forEach((r,i) => {
-      const ws = XLSX.utils.json_to_sheet(r.results);
-      XLSX.utils.book_append_sheet(wb, ws, `Rond ${i+1}`);
-    });
-    const totalWs = XLSX.utils.json_to_sheet(totals);
-    XLSX.utils.book_append_sheet(wb, totalWs, "Total");
-    XLSX.writeFile(wb, "herrgolf.xlsx");
-  };
+const exportExcel = () => {
+  const wb = XLSX.utils.book_new();
+
+  rounds.forEach((r, i) => {
+    const ws = XLSX.utils.json_to_sheet(r.results);
+
+    const sheetName =
+      i === 16 ? "Shoot-Out" : `Rond ${i + 1}`;
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  const totalWs = XLSX.utils.json_to_sheet(totals);
+  XLSX.utils.book_append_sheet(wb, totalWs, "Total");
+
+  XLSX.writeFile(wb, "herrgolf.xlsx");
+};
 
 const buildTotalTableRows = () => {
   const players = {};
@@ -421,10 +509,11 @@ const buildTotalTableRows = () => {
       players[res.golfId].total += res.points;
       players[res.golfId].money += res.money || 0;
 
-      // räkna endast om man fått poäng
-      if (res.points > 0) {
-        players[res.golfId].roundsPlayed += 1;
-      }
+// Räkna deltagande endast för ordinarie Herrgolf #1–16.
+// Shoot-Out (#17) ger poäng men ökar inte Delt.
+if (roundIndex < 16 && res.points > 0) {
+  players[res.golfId].roundsPlayed += 1;
+}
     });
   });
 
@@ -527,7 +616,10 @@ const drawHeader = () => {
     "HCP",
     "SHCP",
     "Delt.",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    ...Array.from(
+  { length: ROUNDS },
+  (_, i) => i === 16 ? "SO" : `H#${i + 1}`
+),
     "Total",
     "Pengar"
   ];
@@ -581,7 +673,10 @@ autoTable(doc, {
     "HCP",
     "SHCP",
     "Delt.",
-    ...Array.from({ length: ROUNDS }, (_, i) => `H#${i + 1}`),
+    ...Array.from(
+  { length: ROUNDS },
+  (_, i) => i === 16 ? "SO" : `H#${i + 1}`
+),
     "Total",
     "Pengar"
   ]],
@@ -836,84 +931,130 @@ autoTable(doc, {
             <div>{p.hcp}</div>
             <div>{p.shcp}</div>
             <div>{p.class}</div>
-            <input
-              disabled={current.locked || playerView}
-              value={p.net}
-              onChange={e=>{
-                const v=e.target.value;
-                setRounds(prev=>{
-                  const copy=[...prev];
-                  copy[currentRound-1].participants[i].net=v;
-                  return copy;
-                });
-              }}
-            />
+<input
+  disabled={current.locked || playerView}
+  value={p.net}
+  placeholder={currentRound === 17 ? "Plac" : "Netto"}
+  onChange={e=>{
+    const v = e.target.value;
+
+    setRounds(prev => {
+      const copy = [...prev];
+
+      const playerIndex =
+        copy[currentRound - 1].participants.findIndex(
+          player => player.golfId === p.golfId
+        );
+
+      if (playerIndex !== -1) {
+        copy[currentRound - 1].participants[playerIndex].net = v;
+      }
+
+      return copy;
+    });
+  }}
+/>
           </div>
         ))}
       </Card>
 
-      {/* Resultat */}
-      {["A","B"].map(klass=>(
-        <Card key={klass}>
-          <strong>Resultat – Klass {klass}</strong>
-{current.results.filter(r => r.class === klass).map((r, i) => (
-<div
-  key={i}
-  style={{
-    fontSize: 12,
-    display: "grid",
-    gridTemplateColumns: "40px 1fr 50px 50px 60px 60px 80px",
-    alignItems: "center",
-    gap: 6
-  }}
->
+{/* Resultat */}
 
-  {/* Placering / Diskad */}
-  <div>
-    {r.net === 999 ? (
-      <span style={{ color: "red", fontWeight: "bold" }}>❌</span>
-    ) : (
-      r.place
-    )}
-  </div>
+{currentRound !== 17 && ["A","B"].map(klass=>(
+  <Card key={klass}>
+    <strong>Resultat – Klass {klass}</strong>
 
-  {/* Namn */}
-  <div>{r.name}</div>
+    {current.results.filter(r => r.class === klass).map((r, i) => (
+      <div
+        key={i}
+        style={{
+          fontSize: 12,
+          display: "grid",
+          gridTemplateColumns: "40px 1fr 50px 50px 60px 60px 80px",
+          alignItems: "center",
+          gap: 6
+        }}
+      >
 
-  {/* HCP */}
-  <div>{r.hcp}</div>
+        {/* Placering / Diskad */}
+        <div>
+          {r.net === 999 ? (
+            <span style={{ color: "red", fontWeight: "bold" }}>❌</span>
+          ) : (
+            r.place
+          )}
+        </div>
 
-  {/* SHCP */}
-  <div>{r.shcp}</div>
+        {/* Namn */}
+        <div>{r.name}</div>
 
-  {/* Netto (dölj för diskad) */}
-  <div>{r.net === 999 ? "" : r.net}</div>
+        {/* HCP */}
+        <div>{r.hcp}</div>
 
-  {/* Poäng */}
-  <div>{r.points}p</div>
+        {/* SHCP */}
+        <div>{r.shcp}</div>
 
-  {/* Pengar – endast topp 4 */}
-  <div>
-    {r.place <= 4 && r.net !== 999 ? (
-      <input
-        type="number"
-        value={r.money ?? ""}
-        placeholder="kr"
-        style={{ width: 70 }}
-        onChange={(e) =>
-          updateMoney(r.golfId, e.target.value)
-        }
-      />
-    ) : (
-      ""
-    )}
-  </div>
+        {/* Netto (dölj för diskad) */}
+        <div>{r.net === 999 ? "" : r.net}</div>
 
-</div>
+        {/* Poäng */}
+        <div>{r.points}p</div>
 
+        {/* Pengar – endast topp 4 */}
+        <div>
+          {r.place <= 4 && r.net !== 999 ? (
+            <input
+              type="number"
+              value={r.money ?? ""}
+              placeholder="kr"
+              style={{ width: 70 }}
+              onChange={(e) =>
+                updateMoney(r.golfId, e.target.value)
+              }
+            />
+          ) : (
+            ""
+          )}
+        </div>
+
+      </div>
+    ))}
+
+  </Card>
 ))}
-        </Card>
+
+
+{/* SHOOT-OUT RESULTAT */}
+{currentRound === 17 && (
+  <Card>
+    <strong>Resultat – Shoot-Out</strong>
+
+    {current.results
+      .filter(r => r.class === "SO")
+      .map((r, i) => (
+        <div
+          key={i}
+          style={{
+            fontSize: 12,
+            display: "grid",
+            gridTemplateColumns: "60px 1fr 80px",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 0"
+          }}
+        >
+          <div>{r.place}</div>
+
+          <div>{r.name}</div>
+
+          <div style={{ fontWeight: "bold" }}>
+            {r.points}p
+          </div>
+        </div>
       ))}
+
+  </Card>
+)}
 
       {/* Total */}
       <Card>
