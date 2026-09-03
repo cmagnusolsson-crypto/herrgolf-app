@@ -838,7 +838,9 @@ autoTable(doc, {
         Deltävling:
         <select value={currentRound} onChange={e => setCurrentRound(Number(e.target.value))}>
           {Array.from({length:ROUNDS}).map((_,i)=>(
-            <option key={i} value={i+1}>#{i+1}</option>
+            <option key={i} value={i+1}>
+  {i === 16 ? "Shoot-Out" : `#${i + 1}`}
+</option>
           ))}
         </select>
       </div>
