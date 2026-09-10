@@ -790,9 +790,97 @@ autoTable(doc, {
   return;
 }
 
+
+};
+
+// ===== SHOOT-OUT PDF =====
+const exportShootOutPDF = async () => {
+  const shootOutResults = rounds[16]?.results
+    ?.filter(r => r.class === "SO")
+    ?.sort((a, b) => a.place - b.place);
+
+  if (!shootOutResults || shootOutResults.length === 0) {
+    alert("Inget Shoot-Out-resultat att exportera ännu.");
+    return;
+  }
+
+  const doc = new jsPDF("p", "mm", "a4");
+
+  // Ladda Hammarö GK-loggan
+  if (!cachedLogoBase64) {
+    try {
+      cachedLogoBase64 = await loadImageAsBase64("/logo.png");
+    } catch (e) {
+      console.warn("Kunde inte ladda logga i Shoot-Out PDF:", e);
+    }
+  }
+
+  // Logga uppe till höger
+  if (cachedLogoBase64) {
+    doc.addImage(cachedLogoBase64, "PNG", 172, 7, 25, 25);
+  }
+
+  // Rubrik
+  doc.setFontSize(18);
+  doc.text("Resultat – Shoot-Out 2026", 15, 25);
+
+  // Resultatrader: Plac | Namn | Poäng
+  const rows = shootOutResults.map(r => [
+    r.place,
+    r.name,
+    `${r.points} p`
+  ]);
+
+  autoTable(doc, {
+    startY: 36,
+    head: [["Plac", "Namn", "Poäng"]],
+    body: rows,
+
+    headStyles: {
+      fillColor: [15, 109, 59],
+      textColor: 255,
+      lineWidth: 0
+    },
+
+    // Inga linjer mellan spelarna
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 1,
+      lineWidth: 0
+    },
+
+    bodyStyles: {
+      lineWidth: 0
+    },
+
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 110 },
+      2: { cellWidth: 30 }
+    },
+
+ // Poängen i fetstil + vinnaren i fetstil
+didParseCell: (data) => {
+  if (data.section === "body") {
+
+    // Vinnaren – hela raden i fetstil
+    if (data.row.index === 0) {
+      data.cell.styles.fontStyle = "bold";
+    }
+
+    // Poäng – fetstil för alla spelare
+    if (data.column.index === 2) {
+      data.cell.styles.fontStyle = "bold";
+    }
+  }
+}
+  });
+
+  doc.save("Shoot-Out_2026.pdf");
 };
 
   const publicLink = `${window.location.origin}${window.location.pathname}?view=player`;
+
 
   /* ================= LOGIN ================= */
 
@@ -862,6 +950,9 @@ autoTable(doc, {
           <Button onClick={()=>resultRef.current.click()}>📥 Resultat</Button>
           <Button onClick={generateResults}>🏁 Skapa</Button>
           <Button onClick={exportExcel}>📊 Excel</Button>
+          {currentRound === 17 && (
+            <Button onClick={exportShootOutPDF}>📄 PDF Shoot-Out</Button>
+          )}
 <Button onClick={() => {
   console.log("PDF TOTAL klickad");
   exportCompetitionPDF("TOTAL");
